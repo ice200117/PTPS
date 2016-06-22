@@ -1,0 +1,153 @@
+#include "Condition4Timer.h"
+
+#include <QDateTime>
+#include <QMutexLocker>
+
+#include "../JobResolver/JobResolver.h"
+
+Condition4Timer::Condition4Timer(void) : m_Timer4Heartbeat(0)
+	,m_ConditionStep(DAY)
+	,m_ibeatTime(1000)//必须是一秒，暂时无解 T_T
+	,m_updataCondition4Day("00:00:00")
+	,m_updataCondition4Hour("00:00")
+{
+	updataConditionList();
+
+	m_xmlEleName = "Every";
+}
+
+Condition4Timer::~Condition4Timer(void)
+{
+	stopHeartbeat();
+}
+
+QString Condition4Timer::startHeartbeat( int ibeatTime )
+{
+	if (m_Timer4Heartbeat) stopHeartbeat();
+
+	m_Timer4Heartbeat = new QTimer(this);
+	m_Timer4Heartbeat->setInterval(ibeatTime);
+	connect(m_Timer4Heartbeat,SIGNAL(timeout()),this,SLOT(slotHandleHeartbeat()),Qt::QueuedConnection);
+	m_Timer4Heartbeat->start();
+
+	return "Successful";
+}
+
+QString Condition4Timer::stopHeartbeat()
+{
+	if (m_Timer4Heartbeat) 
+	{
+		m_Timer4Heartbeat->disconnect();
+		m_Timer4Heartbeat->stop();
+		delete m_Timer4Heartbeat;
+		m_Timer4Heartbeat = 0;
+	}
+
+	return "Successful";
+}
+
+void Condition4Timer::slotHandleHeartbeat()
+{
+	QDateTime cTime = QDateTime::currentDateTime();
+	QString hms;
+	if (DAY == m_ConditionStep)
+	{
+		hms = cTime.toString("hh:mm:ss");
+		if (m_updataCondition4Day == hms)
+		{
+			stopHeartbeat();
+			updataConditionList();
+		}
+	}
+	if (HOUR == m_ConditionStep)
+	{
+		hms = cTime.toString("mm:ss");
+		if (m_updataCondition4Hour == hms)
+		{
+			stopHeartbeat();
+			updataConditionList();
+		}
+	}
+
+	{
+		QMutexLocker lLocker(&m_Mutex4Tim2Job);
+		//if (m_hashTim2Job.contains(hms))
+		//{
+		QMultiHash<QString, QString>::iterator iter = m_hashTim2Job.find(hms);
+		while (iter != m_hashTim2Job.end() && iter.key() == hms) 
+		{
+			QString needExecJob = iter.value();
+			emit signalExecJobOnCondition(needExecJob);
+			++iter;
+		}
+		//}
+	}
+}
+
+QString Condition4Timer::createNewConditionJob( QString strJobId )
+{
+	if (!((JobResolver*)_pJobResolver)->isJob4Type(strJobId,m_xmlEleName)) return "Not Timer Job!";
+
+	{
+		QMutexLocker locker(&m_Mutex4Job);
+		m_list4Job.push_back(strJobId);
+	}
+
+	return updataConditionList();
+}
+
+QString Condition4Timer::deleteExistConditionJob( QString strJobId )
+{
+	if (!((JobResolver*)_pJobResolver)->isJob4Type(strJobId,m_xmlEleName)) return "Not Timer Job!";
+
+	{
+		QMutexLocker locker(&m_Mutex4Job);
+		m_list4Job.removeAll(strJobId);
+	}
+
+	return updataConditionList();
+}
+
+QString Condition4Timer::updataConditionList()
+{
+	QMultiHash<QString, QString> tmpMHTim2Job;
+	{
+		QMutexLocker locker(&m_Mutex4Job);
+		for (int iJobIndex = 0;iJobIndex < m_list4Job.size();iJobIndex++)
+		{
+			QString strCurJob = m_list4Job[iJobIndex];
+			QStringList strlitTime = getConditionTime(strCurJob);
+			for (int i = 0;i < strlitTime.size();i++)
+			{
+				tmpMHTim2Job.insert(strlitTime[0],strCurJob);
+			}
+		}
+	}
+
+	stopHeartbeat();
+	{
+		QMutexLocker lLocker(&m_Mutex4Tim2Job);
+		m_hashTim2Job.clear();
+		m_hashTim2Job = tmpMHTim2Job;
+	}
+	startHeartbeat(m_ibeatTime);
+
+	return "Successful";
+}
+
+QStringList Condition4Timer::getConditionTime( QString strJobId)
+{
+	if (!_pJobResolver) return QStringList();
+	if (!((JobResolver*)_pJobResolver)->isJob4Type(strJobId, m_xmlEleName)) return QStringList();
+
+	if (DAY == m_ConditionStep)
+	{
+		return ((JobResolver*)_pJobResolver)->getConditionTimeEachDay(strJobId);
+	}
+	if (HOUR == m_ConditionStep)
+	{
+		return ((JobResolver*)_pJobResolver)->getConditionTimeEachHour(strJobId);
+	}
+
+	return QStringList();
+}

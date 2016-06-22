@@ -1,0 +1,24 @@
+#pragma once
+#include "TaskExecutor_Global.h"
+#include "../common/Task.hpp"
+#include <QObject>
+#include <QThread>
+
+class TASKEXECUTOR_IMPEXP TaskExecutor : public QThread
+{
+	Q_OBJECT
+
+public:
+	TaskExecutor();
+	TaskExecutor(Task t) : m_task(t) {};
+	virtual ~TaskExecutor(void);
+	void run();
+	int alg(Task &t);
+signals:
+	void signalSendResult2Cont(Task t);
+private:
+	void setTaskBegin();
+	void setTaskEnd(int ret);
+	Task m_task;
+};
+

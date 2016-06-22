@@ -1,0 +1,91 @@
+#include "MsgReceiver.h"
+#include "../Logger/Logger.h"
+
+MsgReceiver::MsgReceiver(void)
+{
+	m_WorkerIP = "localhost";
+	m_WorkerPort = "5555";
+	m_WorkerID = "echo";
+
+	m_toDead = false;
+
+	m_strLastError = "Successful";
+}
+
+MsgReceiver::~MsgReceiver(void)
+{
+
+}
+
+#include "../CZMQ_Worker/mdwrkapi.h"
+
+void MsgReceiver::run()
+{
+    zmsg_t *reply = 0;
+    mdwrk_t *session = 0;
+    zframe_t * lastFrame = 0;
+    char* lastMsg = 0;
+
+    int verbose = 1;
+    QString strAddr = "tcp://" + m_WorkerIP + ":" + m_WorkerPort;
+    std::string stAddr = strAddr.toStdString();
+    char * cAddr = (char *)stAddr.c_str();
+    std::string stID = m_WorkerID.toStdString();
+    char * cID = (char *)stID.c_str();
+    session = mdwrk_new (cAddr, cID, verbose);
+    //session = mdwrk_new ("tcp://localhost:5555", "echo", verbose);
+	Logger *p = &(Logger::getInstance());
+
+    if (!session)
+    {
+        m_strLastError = "MsgReceiver: Connection creation failed!";	
+        return;
+    }
+    while (true) {
+        zmsg_t *request = mdwrk_recv (session, &reply);
+
+        if (request == NULL) 
+        {
+            m_strLastError = "MsgReceiver: Message reception failed!";	
+            break;              //  Worker was interrupted
+            //continue;
+        }
+
+        //解析收到的信息
+        lastFrame = zmsg_last(request);
+        lastMsg = zframe_strdup(lastFrame);
+
+        //printf("%s:::%s\n", cID, lastMsg);
+        //printf("zmsg_t::size:%d\n", zmsg_content_size(request));
+
+        QString strComm = QString(lastMsg);
+        if (!strComm.isEmpty())
+        {
+			p->writeInfo("MsgReceiver get new Command :" + strComm);
+            {
+                emit signalSendNewCommand(strComm);
+            }
+			p->writeInfo("MsgReceiver finish signalSendNewCommand :" + strComm);
+
+            reply = zmsg_new ();
+            zmsg_pushstr (reply, "sccessed");
+
+            zmsg_destroy (&request);
+        }
+        if (m_toDead)
+        {
+            ///////从API里面找的/////////////
+            zmsg_wrap (reply, session->reply_to);
+            s_mdwrk_send_to_broker (session, MDPW_REPLY, NULL, reply);
+            zmsg_destroy (&reply);
+            session->expect_reply = 1;
+            /////////////////////////////////
+
+            zmsg_destroy (&request);
+            break;
+        }
+    }
+    mdwrk_destroy (&session);
+
+	p->writeInfo("MsgReceiver toDead!");
+}

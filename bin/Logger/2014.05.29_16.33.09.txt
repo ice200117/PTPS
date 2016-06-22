@@ -1,0 +1,8 @@
+PTPS started on 2014.05.29_16:33:09
+2014.05.29_16:33:09 : MasterSystem strated.
+2014.05.29_16:33:09 : SlaveSystem strated.
+2014.05.29_16:33:09 : START Job 'Job_FJ_Debug'.
+2014.05.29_16:33:16 : Begin 'Job_FJ_Debug'.
+2014.05.29_16:33:16 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 1978243902   start!
+2014.05.29_16:33:17 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 1978243902   has exist, taskInfo.cmd is error
+2014.05.29_16:33:26 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 1978243902   finished!

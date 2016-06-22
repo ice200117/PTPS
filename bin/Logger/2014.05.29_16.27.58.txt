@@ -1,0 +1,7 @@
+PTPS started on 2014.05.29_16:27:58
+2014.05.29_16:27:58 : MasterSystem strated.
+2014.05.29_16:27:58 : SlaveSystem strated.
+2014.05.29_16:27:58 : START Job 'Job_FJ_Debug'.
+2014.05.29_16:28:08 : Begin 'Job_FJ_Debug'.
+2014.05.29_16:28:08 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 1791530825   start!
+2014.05.29_16:28:19 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 1791530825   finished!

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Job>
+	<UUID>012345699</UUID>
+	<Trigger>
+        <MonitorDirAll>/mnt/disk/PTPS/bin/data/</MonitorDirAll>
+	</Trigger>
+	<Product>Product_Debug</Product>
+</Job>

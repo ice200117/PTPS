@@ -1,0 +1,832 @@
+#include "TaskExecutor.h"
+#include "dyncall.h"
+#include "dynload.h"
+#include <time.h>
+#include  <stdio.h>
+#include  <stdlib.h>
+#include  <string.h>
+#include  <QProcess>
+
+
+#include    "../common/global_def.hpp"
+#include    "../common/Serialization.hpp"
+#include    "../Logger/Logger.h"
+
+#ifdef _WINDOWS
+#else
+#include  <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#endif
+
+//#define RUN_IN_THREAD 
+
+TaskExecutor::TaskExecutor(void)
+{
+    m_childPid = 0;
+    m_algProcess = NULL;
+}
+
+
+TaskExecutor::TaskExecutor(Task t) : m_task(t) 
+{
+    m_childPid = 0;
+    m_algProcess = NULL;
+}
+
+TaskExecutor::~TaskExecutor(void)
+{
+    if(m_algProcess){
+        delete m_algProcess;
+        m_algProcess = NULL;
+    }
+}
+
+
+void TaskExecutor::setTaskBegin(){
+    /*  m_task.pid = pid;*/
+    m_task.status = RUNNING;
+    //m_task.mpiPid = rank;
+    //strcpy(m_task.host, host);
+
+    struct tm *p; 
+    time_t timep;
+    time(&timep);
+    p = gmtime(&timep);
+    sprintf(m_task.beginTime,"%d%.2d%.2d%.2d%.2d%.2d.000",(1900+p->tm_year),
+            (1+p->tm_mon),p->tm_mday,p->tm_hour,p->tm_min,
+            p->tm_sec);
+}
+
+void TaskExecutor::setTaskEnd(int ret){
+    /*  m_task.pid = pid;*/
+    idebug("ret = %d\n", ret)
+    if( ret == 1){
+        m_task.status = FINISHED;
+    }else {
+        m_task.status = FAILED;
+    }
+    //m_task.mpiPid = rank;
+    //strcpy(m_task.host, host);
+
+    struct tm *p; 
+    time_t timep;
+    time(&timep);
+    p = gmtime(&timep);
+    sprintf(m_task.endTime,"%d%.2d%.2d%.2d%.2d%.2d.000",(1900+p->tm_year),
+            (1+p->tm_mon),p->tm_mday,p->tm_hour,p->tm_min,
+            p->tm_sec);
+}
+
+
+int TaskExecutor::loadLib()
+{
+    int ret;
+#ifdef _WINDOWS
+    log(" start!");
+    ret = alg1(m_task);
+    if(ret != 1){
+        printf("TaskId %d  is failed!\n",m_task.taskId);
+        log(" is failed!");
+    }
+    log(" finished!");
+#else
+    int pid;
+    int fd[2];
+    pipe(fd);
+    pid = fork();
+
+    if(pid < 0){
+        printf ( "fork() failed!\n" );
+        ret = -1;
+    }else if(pid == 0){
+        log(" start!");
+        ret = alg1(m_task);
+        if(ret != 1){
+            printf("TaskId %d  is failed!\n",m_task.taskId);
+            _exit(-1);
+        }
+        Resource re;
+        Serialization se;
+        QByteArray qba;
+        qba = se.serialize(m_task, re);
+        write(fd[1], qba.data(), qba.size());	
+        _exit(0);
+    }else{
+        printf("taskId %d is running on pid %d !\n", m_task.taskId,  pid);
+        m_childPid = m_task.pid = pid;
+        emit signalSendResult2Cont(m_task);
+        int status;
+        waitpid(pid, &status, 0);
+        if(WIFEXITED(status)){
+            if(WEXITSTATUS(status)!=0){
+                ret = -1;
+                log(" is failed!");
+            }else{
+                ret = 1;
+                char *buf;
+                int r,len,buf_len;
+                r = 0;
+                len = 1024;
+                buf_len = 0;
+                buf = (char*)calloc(len, sizeof(char));
+                r = read(fd[0], buf, len);
+                buf_len += r;
+                while(r == len){
+                    printf("buf_len = %d\n", buf_len);
+                    len = len * 2;
+                    buf = (char*)realloc(buf, (buf_len+len)*sizeof(char));
+                    perror("realloc");
+                    if(buf == NULL){
+                        printf("realloc failed!\n");
+                        ret = -1;
+                    }
+                    r = read(fd[0], buf+buf_len, len);
+                    buf_len += r;
+                }
+                if(buf_len > 0){
+                    Serialization de;
+                    de.deserialize(buf, buf_len);
+                    m_task = de.t();
+                }
+                free(buf);
+                buf = NULL;
+                log(" finished!");
+            }
+        }else{
+            log(" is failed!");
+            ret = -1;
+        }
+    }
+    close(fd[0]);
+    close(fd[1]);
+#endif
+    return ret;
+}
+
+void TaskExecutor::run()
+{
+    int ret;
+    setTaskBegin();
+    emit signalSendResult2Cont(m_task);
+    if(m_task.taskInfo.execType == 0){
+        //load so.
+        ret = loadLib();
+    }else{
+        // exec.
+        ret = startProcess();        
+    }
+
+    setTaskEnd(ret);
+    emit signalSendResult2Cont(m_task);
+}
+
+#include <QFileInfo>
+
+int TaskExecutor::startProcess()
+{
+    QString program = m_task.taskInfo.libName;
+    QStringList arguments;
+    char *p = m_task.taskInfo.paraType;
+    int i=0;
+    while(*p != ')'  && *p != '\0'){ 
+        arguments << m_task.taskInfo.paraValue[i];
+        i++;
+        p++;
+    }
+
+	QFileInfo qfiExec(program);
+	QString qstrAbsPath = qfiExec.absolutePath();
+	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+	env.insert("PATH", env.value("Path") + ";" + qstrAbsPath);
+
+    //QObject *parent;
+    m_algProcess = new QProcess();
+	m_algProcess->setProcessEnvironment(env);
+    m_algProcess->start(program, arguments);
+    //QByteArray  res = m_algProcess->readAllStandardOutput();
+    if (!m_algProcess->waitForStarted(-1)){
+        printf("%s start failed!\n", program.toStdString().c_str());
+        log(" start failed!");
+        return -1;
+    }
+    log( " start!");
+    //m_algProcess->waitForFinished(m_task.taskInfo.timeout);
+	m_algProcess->waitForFinished(-1);
+    QProcess::ExitStatus  es = m_algProcess->exitStatus();
+
+
+    QByteArray  res = m_algProcess->readAllStandardOutput();
+    QString s(res);
+    idebug("Process stdout: %s\n", s.toStdString().c_str());
+    delete m_algProcess;
+    m_algProcess = NULL;
+    if(es == QProcess::NormalExit){
+        log(" finished!");
+        return 1;
+    }else {
+        log(" failed!");
+        return -1;
+    }
+}
+
+int TaskExecutor::alg1(Task &t)
+{
+
+    printf ( "libName = %s\n",t.taskInfo.libName);
+
+    DLLib *l = dlLoadLibrary(t.taskInfo.libName);
+    if(l == NULL){
+        printf("l is NULL\n");
+        log( "libName is wrong");
+        return -1;
+    }
+
+
+    char* ret_c; short* ret_S; int* ret_i; long* ret_l;
+    long long* ret_L; char* ret_s; float* ret_f; double* ret_d;
+    ReturnGenType* ret_p;
+
+    printf ( "funName = %s\n",t.taskInfo.funName);
+    if(strcmp(t.taskInfo.funName,"")!=0){
+        void* tf = dlFindSymbol(l, t.taskInfo.funName);
+        if(tf == NULL){
+            fprintf ( stderr, "function %s not found!\n", t.taskInfo.funName);
+            log(" function not found!");
+            return -1;
+        }else{
+            DCCallVM* vm = dcNewCallVM(4096);
+            dcReset(vm);
+            int j=0;
+            int hasRet = 0;
+            printf ( "paraType = %s\n",t.taskInfo.paraType );
+            while(t.taskInfo.paraType[j]!=0){
+                if(t.taskInfo.paraType[j] == ')') {
+                    hasRet = 1;
+                    break;
+                }
+
+                switch ( t.taskInfo.paraType[j] ) { // Types see Task.hpp
+                    int k;
+                    char c;
+                    int len;
+
+                    case 'i':
+                    printf( "case i\n" );
+                    int *pi;
+                    pi = (int*)t.taskInfo.getInputValue(len, j);
+                    if(!pi){
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be int. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                log(QString("%1 %2").arg("please check input type int and value at index").arg(j));
+                                return -1;
+                            }
+                            printf("paraValue[%d] = %d\n", j, atoi(t.taskInfo.paraValue[j]));
+                            dcArgInt(vm, atoi(t.taskInfo.paraValue[j]));
+                        }
+                    }else {
+                        printf("InputValue[%d] = %d\n", j, *pi);
+                        dcArgInt(vm, *pi);
+                    }
+                    break;
+                    case 'f':
+                    printf ( "case f\n" );
+                    float *pf;
+                    pf = (float*)t.taskInfo.getInputValue(len, j);
+                    if(!pf){
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0){
+                            if(!(isdigit(c) || c == 46)){
+                                printf("paraValue[%d] should be float. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                log(QString("%1 %2").arg("please check input type float and value at index").arg(j));
+                                return -1;
+                            }
+                        }
+                        printf ( "paraValue[%d] = %f\n",j,atof(t.taskInfo.paraValue[j]) );
+                        dcArgFloat(vm, atof(t.taskInfo.paraValue[j]));
+                    }else{
+                        printf("InputValue[%d] = %f\n", j, *pf);
+                        dcArgFloat(vm, *pf);
+
+                    }
+                    break;
+
+                    case 's':
+                    printf ( "case s\n" );
+                    char* ps;
+                    ps = (char*)t.taskInfo.getInputValue(len, j);
+                    if(!ps){
+                        printf ( "paraValue[%d] = %s\n",j,t.taskInfo.paraValue[j] );
+                        dcArgPointer(vm, (DCpointer)t.taskInfo.paraValue[j]);
+                    }else{
+                        printf("InputValue[%d] = %s\n", j, ps);
+                        dcArgPointer(vm, ps);
+                    }
+                    break;
+
+                    case 'd':
+                    printf ( "case d\n" );
+                    double *pd;
+                    pd = (double*)t.taskInfo.getInputValue(len, j);
+                    if(!pd){
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0){
+                            if(!(isdigit(c) || (c==46)) ){
+                                printf("paraValue[%d] should be double. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                log(QString("%1 %2").arg("please check input type double and value at index").arg(j));
+                                return -1;
+                            }
+                        }
+                        printf ( "paraValue[%d] = %g\n",j,atof(t.taskInfo.paraValue[j]) );
+                        dcArgDouble(vm, atof(t.taskInfo.paraValue[j]));
+                    }else{
+                        printf("InputValue[%d] = %lf\n", j, *pd);
+                        dcArgDouble(vm, *pd);
+
+                    }
+                    break;
+
+                    //case 'b':
+                    //printf( "case b\n" );
+                    //char *s;
+                    //s = t.taskInfo.paraValue[j];
+                    //if(strcmp(s,"false")==0) dcArgBool(vm, 1);
+                    //else if(strcmp(s,"true")==0) dcArgBool(vm, 0);
+                    //else {
+                    //printf("paraValue[%d] should be bool(false or true). but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                    //return -1;
+                    //}
+                    //break;
+
+                    case 'c':
+                    printf( "case c\n" );
+                    char *pc;
+                    pc = (char*)t.taskInfo.getInputValue(len, j);
+                    if(!pc){
+                        k = c = 0;
+                        if((c=t.taskInfo.paraValue[j][k++])!=0){
+                            //if(!(isalpha(c))){
+                            //printf("paraValue[%d] should be char. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            //log(QString("%1 %2").arg("please check input char double and value at index").arg(j));
+                            //return -1;
+                            //}
+                        }
+                        dcArgChar(vm, c);
+                    }else{
+                        printf("InputValue[%d] = %c\n", j, *pc);
+                        dcArgChar(vm, *pc);
+                    }
+                    break;
+
+                    case 'S':
+                    printf( "case S\n" );
+                    short *pS;
+                    pS = (short*)t.taskInfo.getInputValue(len, j);
+                    if(!pS){
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be short. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                log(QString("%1 %2").arg("please check input type short and value at index").arg(j));
+                                return -1;
+                            }
+                        }
+                        printf("paraValue[%d] = %d\n", j, atoi(t.taskInfo.paraValue[j]));
+                        dcArgShort(vm, (short)atoi(t.taskInfo.paraValue[j]));
+                    }else{
+                        printf("InputValue[%d] = %d\n", j, *pS);
+                        dcArgShort(vm, *pS);
+                    }
+                    break;
+
+                    case 'l':
+                    printf( "case l\n" );
+                    long *pl;
+                    pl =  (long*)t.taskInfo.getInputValue(len, j);
+                    if(!pl){
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be long. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                log(QString("%1 %2").arg("please check input type long and value at index").arg(j));
+                                return -1;
+                            }
+                        }
+                        printf("paraValue[%d] = %ld\n", j, atol(t.taskInfo.paraValue[j]));
+                        dcArgLong(vm, (long)atol(t.taskInfo.paraValue[j]));
+                    }else{
+                        printf("InputValue[%d] = %ld\n", j, *pl);
+                        dcArgLong(vm, *pl);
+
+                    }
+                    break;
+
+                    case 'L':
+                    printf( "case L\n" );
+                    long long* pL;
+                    pL = (long long*)t.taskInfo.getInputValue(len, j);
+                    if(!pL){
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be long long. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                log(QString("%1 %2").arg("please check input type long long and value at index").arg(j));
+                                return -1;
+                            }
+                        }
+                        printf("paraValue[%d] = %d\n", j, atol(t.taskInfo.paraValue[j]));
+                        dcArgLongLong(vm, (long long)atol(t.taskInfo.paraValue[j]));
+                    }else{
+                        printf("InputValue[%d] = %lld\n", j, *pL);
+                        dcArgLongLong(vm, *pL);
+
+                    }
+                    break;
+
+                    case 'p':
+                    printf ( "case p\n" );
+
+                    void *pv;
+                    pv = t.taskInfo.getInputValue(len, j);
+                    if(!pv){
+                        dcArgPointer(vm, (DCpointer)t.taskInfo.paraValue[j]);
+                    }else{
+                        dcArgPointer(vm, (DCpointer)pv);
+                    }
+                    break;
+
+                    default:	
+                    printf("unknown rtype '%c'", t.taskInfo.paraType[j]); 
+                    log(QString("%1 %2 %3 %4").arg(" unknown type ").arg(t.taskInfo.paraType[j]).arg(" at index ").arg(j));
+                    return -1;
+                    break;
+                }  /* -----  end switch  ----- */
+                j++;
+            }
+            // Call function in lib.
+
+            if(hasRet == 0) {
+                printf("return void\n");
+                dcCallVoid(vm, tf);
+            } else {
+                j++;
+                if(t.taskInfo.paraType[j]==0) dcCallVoid(vm, tf);
+                while(t.taskInfo.paraType[j]!=0){
+                    switch ( t.taskInfo.paraType[j] )
+                    {
+                        case 'v': 
+                            printf("return void\n");
+                            dcCallVoid(vm, tf); break;
+                        case 'c': 
+                            printf("return char\n");
+                            ret_c = new char;
+                            *ret_c = dcCallChar    (vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_c, sizeof(char));
+                            delete ret_c;
+                            break;
+                        case 'S': 
+                            printf("return short\n");
+                            ret_S = new short;
+                            *ret_S = dcCallShort   (vm, tf);
+                            t.taskInfo.setRetValue((void*)ret_S, sizeof(short));
+                            delete ret_S;
+                            break;
+                        case 'i': 
+                            printf("return int\n");
+                            ret_i = new int;
+                            *ret_i = dcCallInt     (vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_i, sizeof(int));
+                            delete ret_i;
+                            break;
+                        case 'l': 
+                            printf("return long\n");
+                            ret_l = new long;
+                            *ret_l = dcCallLong    (vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_l, sizeof(long));
+                            delete ret_l;
+                            break;
+                        case 'L': 
+                            printf("return long long\n");
+                            ret_l = new long;
+                            ret_L = new long long;
+                            *ret_L = dcCallLongLong(vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_L, sizeof(long long));
+                            delete ret_L;
+                            break;
+                        case 's': 
+                            printf("return cstring\n");
+                            ret_s = (char*)dcCallPointer (vm, tf);
+                            t.taskInfo.setRetValue(ret_s, strlen(ret_s)+1);
+                            break;
+                        case 'f': 
+                            printf("return float\n");
+                            ret_f = new float;
+                            *ret_f = dcCallFloat   (vm, tf); 
+                            t.taskInfo.setRetValue(ret_f, sizeof(float));
+                            delete ret_f;
+                            break;
+                        case 'd': 
+                            printf("return double\n");
+                            ret_d = new double;
+                            *ret_d = dcCallDouble  (vm, tf); 
+                            t.taskInfo.setRetValue(ret_d, sizeof(double));
+                            delete ret_d;
+                            break;
+                        case 'p': 
+                            printf("return void* general type.\n");
+                            ret_p= (ReturnGenType*)dcCallPointer (vm, tf);
+                            //idebug("%d, %s\n",ret_p->len, ret_p->p);
+                            if(ret_p->len > 0 && ret_p->p){
+                                t.taskInfo.setRetValue(ret_p->p, ret_p->len);
+                                delete ret_p->p;
+                            }
+                            if(ret_p) delete ret_p;
+                            break;
+                        default: 
+                            printf("unknown rtype '%c'", t.taskInfo.paraType[j]); 
+                            log(QString("%1 %2 %3 %4").arg(" unknown type ").arg(t.taskInfo.paraType[j]).arg(" at index ").arg(j));
+                            return -1;
+                    }
+                    j++;
+                }
+            }
+            dcFree(vm);
+        }
+    }
+    return 1;
+}
+
+
+int TaskExecutor::alg(Task &t)
+{
+
+    printf ( "libName = %s\n",t.taskInfo.libName);
+
+    DLLib *l = dlLoadLibrary(t.taskInfo.libName);
+    if(l == NULL){
+        printf("l is NULL\n");
+        return -1;
+    }
+
+
+    char* ret_c; short* ret_S; int* ret_i; long* ret_l;
+    long long* ret_L; char* ret_s; float* ret_f; double* ret_d;
+    ReturnGenType* ret_p;
+
+    printf ( "funName = %s\n",t.taskInfo.funName);
+    if(strcmp(t.taskInfo.funName,"")!=0){
+        void* tf = dlFindSymbol(l, t.taskInfo.funName);
+        if(tf == NULL){
+            fprintf ( stderr, "function %s not found!\n", t.taskInfo.funName);
+            return -1;
+        }else{
+            DCCallVM* vm = dcNewCallVM(4096);
+            dcReset(vm);
+            int j=0;
+            int hasRet = 0;
+            printf ( "paraType = %s\n",t.taskInfo.paraType );
+            while(t.taskInfo.paraType[j]!=0){
+                if(t.taskInfo.paraType[j] == ')') {
+                    hasRet = 1;
+                    break;
+                }
+
+                switch ( t.taskInfo.paraType[j] ) { // Types see Task.hpp
+                    int k;
+                    char c;
+
+                    case 'i':
+                    printf( "case i\n" );
+                    k = c = 0;
+                    while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                        if(!isdigit(c)){
+                            printf("paraValue[%d] should be int. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                    }
+                    printf("paraValue[%d] = %d\n", j, atoi(t.taskInfo.paraValue[j]));
+                    dcArgInt(vm, atoi(t.taskInfo.paraValue[j]));
+                    break;
+
+                    case 'f':
+                    printf ( "case f\n" );
+                    k = c = 0;
+                    while((c=t.taskInfo.paraValue[j][k++])!=0){
+                        if(!(isdigit(c) || c == 46)){
+                            printf("paraValue[%d] should be float. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                    }
+                    printf ( "paraValue[%d] = %f\n",j,atof(t.taskInfo.paraValue[j]) );
+                    dcArgFloat(vm, atof(t.taskInfo.paraValue[j]));
+                    break;
+
+                    case 's':
+                    printf ( "case s\n" );
+                    printf ( "paraValue[%d] = %s\n",j,t.taskInfo.paraValue[j] );
+                    dcArgPointer(vm, (DCpointer)t.taskInfo.paraValue[j]);
+                    break;
+
+                    case 'd':
+                    printf ( "case d\n" );
+                    k = c = 0;
+                    while((c=t.taskInfo.paraValue[j][k++])!=0){
+                        if(!(isdigit(c) || (c==46)) ){
+                            printf("paraValue[%d] should be double. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                    }
+                    printf ( "paraValue[%d] = %g\n",j,atof(t.taskInfo.paraValue[j]) );
+                    dcArgDouble(vm, atof(t.taskInfo.paraValue[j]));
+                    break;
+
+                    //case 'b':
+                    //printf( "case b\n" );
+                    //char *s;
+                    //s = t.taskInfo.paraValue[j];
+                    //if(strcmp(s,"false")==0) dcArgBool(vm, 1);
+                    //else if(strcmp(s,"true")==0) dcArgBool(vm, 0);
+                    //else {
+                    //printf("paraValue[%d] should be bool(false or true). but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                    //return -1;
+                    //}
+                    //break;
+
+                    case 'c':
+                    printf( "case c\n" );
+                    k = c = 0;
+                    if((c=t.taskInfo.paraValue[j][k++])!=0){
+                        if(!(isalpha(c))){
+                            printf("paraValue[%d] should be char. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                    }
+                    dcArgChar(vm, c);
+                    break;
+
+                    case 'S':
+                    printf( "case S\n" );
+                    k = c = 0;
+                    while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                        if(!isdigit(c)){
+                            printf("paraValue[%d] should be short. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                    }
+                    printf("paraValue[%d] = %d\n", j, atoi(t.taskInfo.paraValue[j]));
+                    dcArgShort(vm, (short)atoi(t.taskInfo.paraValue[j]));
+                    break;
+
+                    case 'l':
+                    printf( "case l\n" );
+                    k = c = 0;
+                    while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                        if(!isdigit(c)){
+                            printf("paraValue[%d] should be long. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                    }
+                    printf("paraValue[%d] = %ld\n", j, atol(t.taskInfo.paraValue[j]));
+                    dcArgLong(vm, (long)atol(t.taskInfo.paraValue[j]));
+                    break;
+
+                    case 'L':
+                    printf( "case L\n" );
+                    k = c = 0;
+                    while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                        if(!isdigit(c)){
+                            printf("paraValue[%d] should be long long. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                    }
+                    printf("paraValue[%d] = %ld\n", j, atol(t.taskInfo.paraValue[j]));
+                    dcArgLongLong(vm, (long long)atol(t.taskInfo.paraValue[j]));
+                    break;
+
+                    case 'p':
+                    printf ( "case p\n" );
+                    //printf ( "paraValue[%d] = %s\n",j,t.taskInfo.paraValue[j] );
+                    dcArgPointer(vm, (DCpointer)t.taskInfo.paraValue[j]);
+                    break;
+
+                    default:	
+                    printf("unknown rtype '%c'", t.taskInfo.paraType[j]); 
+                    return -1;
+                    break;
+                }  /* -----  end switch  ----- */
+                j++;
+            }
+            // Call function in lib.
+
+            if(hasRet == 0) {
+                dcCallVoid(vm, tf);
+            } else {
+                j++;
+                if(t.taskInfo.paraType[j]==0) dcCallVoid(vm, tf);
+                while(t.taskInfo.paraType[j]!=0){
+                    switch ( t.taskInfo.paraType[j] )
+                    {
+                        case 'v': 
+                            dcCallVoid(vm, tf); break;
+                        case 'c': 
+                            ret_c = new char;
+                            *ret_c = dcCallChar    (vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_c, sizeof(char));
+                            delete ret_c;
+                            break;
+                        case 'S': 
+                            ret_S = new short;
+                            *ret_S = dcCallShort   (vm, tf);
+                            t.taskInfo.setRetValue((void*)ret_S, sizeof(short));
+                            delete ret_S;
+                            break;
+                        case 'i': 
+                            ret_i = new int;
+                            *ret_i = dcCallInt     (vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_i, sizeof(int));
+                            idebug("%d\n", *ret_i);
+                            delete ret_i;
+                            break;
+                        case 'l': 
+                            ret_l = new long;
+                            *ret_l = dcCallLong    (vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_l, sizeof(long));
+                            delete ret_l;
+                            break;
+                        case 'L': 
+                            ret_L = new long long;
+                            *ret_L = dcCallLongLong(vm, tf); 
+                            t.taskInfo.setRetValue((void*)ret_L, sizeof(long long));
+                            delete ret_L;
+                            break;
+                        case 's': 
+                            ret_s = (char*)dcCallPointer (vm, tf);
+                            t.taskInfo.setRetValue(ret_s, strlen(ret_s)+1);
+                            break;
+                        case 'f': 
+                            ret_f = new float;
+                            *ret_f = dcCallFloat   (vm, tf); 
+                            t.taskInfo.setRetValue(ret_f, sizeof(float));
+                            delete ret_f;
+                            break;
+                        case 'd': 
+                            ret_d = new double;
+                            *ret_d = dcCallDouble  (vm, tf); 
+                            t.taskInfo.setRetValue(ret_d, sizeof(double));
+                            delete ret_d;
+                            break;
+                        case 'p': 
+                            ret_p= (ReturnGenType*)dcCallPointer (vm, tf);
+                            if(ret_p->len > 0 && ret_p->p){
+                                t.taskInfo.setRetValue(ret_p->p, ret_p->len);
+                                delete ret_p->p;
+                            }
+                            if(ret_p) delete ret_p;
+                            break;
+                        default: 
+                            printf("unknown rtype '%c'", t.taskInfo.paraType[j]); 
+                            return -1;
+                    }
+                    j++;
+                }
+            }
+            dcFree(vm);
+        }
+    }
+    return 1;
+}
+
+
+void TaskExecutor::slotStopTask()
+{
+    if(m_task.taskInfo.execType == 0){
+#ifdef _WINDOWS
+        setTerminationEnabled();
+        terminated();
+
+        setTaskEnd(-1);
+        emit signalSendResult2Cont(m_task);
+        log(QString("alg thread is be terminated!"));
+#else
+        if(m_childPid != 0){
+            kill(m_childPid, SIGABRT);
+            log(QString("processId %1 is be aborted!").arg(m_childPid));
+        }
+#endif
+    }else{
+        m_algProcess->kill();
+        log(QString("process is be killed!"));
+    }
+}
+
+void TaskExecutor::log(QString stat)
+{
+    Logger *l = &(Logger::getInstance());
+    QString logStr;
+    logStr = m_task.taskInfo.libName;
+    logStr += " taskId "; logStr += QString("%1  ").arg(m_task.taskId);
+    logStr += stat;
+    l->writeInfo(logStr);
+}

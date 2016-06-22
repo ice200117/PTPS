@@ -1,0 +1,896 @@
+#include "JobResolver.h"
+
+#include <QCoreApplication>
+
+#include <QDomDocument>
+#include <QDomElement>
+#include <QDomNode>
+#include <QString>
+#include <QTextStream>
+#include <QDomNodeList>
+
+#include <QDir>
+#include <QFileInfoList>
+#include <QFileInfo>
+#include <QFile>
+
+#include <QUuid>
+#include <QDebug>
+#include <QTime>
+
+#include <QMutexLocker>
+
+#include "../Logger/Logger.h"
+#include "../common/Task.hpp"
+
+JobResolver::JobResolver(void)
+{
+	initJobXmlList();
+	initProductXmlList();
+
+	m_SplitMarker4Timer = ":";
+	m_SplitMarker4Para = "#";
+}
+
+JobResolver::~JobResolver(void)
+{
+
+}
+
+QString JobResolver::initJobXmlList()
+{
+	QString strJobTempDir = QCoreApplication::applicationDirPath() + "/JobTemplate/Job";
+	QDir jobTempD(strJobTempDir);
+	if (!jobTempD.exists())
+	{
+		return QString("JobTempDir '%1' dose not exist!").arg(strJobTempDir);
+	}
+	QFileInfoList strlistJobTemp = jobTempD.entryInfoList();
+
+	{
+		QMutexLocker locker(&m_mutexJobID2XmlFile);
+
+		m_mapJobID2XmlFile.clear();
+		for (int i = 0;i < strlistJobTemp.size();i++)
+		{
+			if (!strlistJobTemp[i].baseName().isEmpty())
+			{
+				m_mapJobID2XmlFile.insert(strlistJobTemp[i].baseName(),strlistJobTemp[i].absoluteFilePath());
+			}
+		}
+	}
+
+	return "Successful";
+}
+
+QString JobResolver::initProductXmlList()
+{
+	QString strProductTempDir = QCoreApplication::applicationDirPath() + "/JobTemplate/Product";
+	QDir jobTempD(strProductTempDir);
+	if (!jobTempD.exists())
+	{
+		return QString("ProductTempDir '%1' dose not exist!").arg(strProductTempDir);
+	}
+	QFileInfoList strlistJobTemp = jobTempD.entryInfoList();
+	for (int i = 0;i < strlistJobTemp.size();i++)
+	{
+		if ("DPPS_Product" == strlistJobTemp[i].baseName())
+		{
+			QFile qFile(strlistJobTemp[i].absoluteFilePath());
+			if (!qFile.open(QFile::ReadOnly | QFile::Text))
+			{
+				return QString("Open ProductXmlFile '%1' failed!").arg(strlistJobTemp[i].absoluteFilePath());
+			}
+            QTextStream textStream(&qFile);
+            QString strContent = textStream.readAll();
+            qFile.close();
+
+			QDomDocument xmlDomDoc;
+			QString errorMSG;
+			int errorLine;
+			int errorCol;
+			if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+			{
+				return QString("ProductXmlFile '%1' Resolver failed!").arg(strlistJobTemp[i].absoluteFilePath());
+			}
+
+			QDomElement rootDomElem = xmlDomDoc.documentElement();
+			QDomNode nIter = rootDomElem.firstChild();
+
+			{
+				QMutexLocker locker(&m_mutexPdtID2DomEle);
+
+				m_mapPdtID2DomEle.clear();
+				while(!nIter.isNull()) {
+					QDomElement nNodeEle = nIter.toElement(); // try to convert the node to an element.
+					if(!nNodeEle.isNull()) {
+						QString tmpStr = nNodeEle.tagName();
+						m_mapPdtID2DomEle.insert(tmpStr,nNodeEle);
+					}
+					nIter = nIter.nextSibling();
+				}
+			}
+		}
+	}
+
+	return "Successful";
+}
+
+QString JobResolver::upDataJobXmlList()
+{
+	QString res = initJobXmlList();
+	return res;
+}
+
+bool JobResolver::doesJobExist( QString strJobID )
+{
+	QMutexLocker locker(&m_mutexJobID2XmlFile);
+
+	QString strXmlFile = m_mapJobID2XmlFile.value(strJobID);
+	if (strXmlFile.isEmpty())
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+bool JobResolver::doesProductExist( QString strPdtID )
+{
+	QMutexLocker locker(&m_mutexPdtID2DomEle);
+
+	QDomElement domEle = m_mapPdtID2DomEle.value(strPdtID);
+	if (domEle.isNull())
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+bool JobResolver::isJob4Type( QString strJobID, QString strType )
+{
+	QString strContent;
+	QString res;
+	res = getFileContent(strJobID,strContent);
+	if ("Successful" != res)
+	{
+		return false;
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		return false;
+	}
+
+	QDomNodeList childNodeList = xmlDomDoc.elementsByTagName( strType );
+	if (childNodeList.isEmpty())
+	{
+		return false;
+	}
+
+	return true;
+}
+
+QString JobResolver::getFileContent( QString strJobID,QString &strContent )
+{
+	if (!doesJobExist(strJobID))
+	{
+		return QString("Job '%1' dose not exist!").arg(strJobID);
+	}
+
+	QString strXmlFile;
+	{
+		QMutexLocker locker(&m_mutexJobID2XmlFile);
+		strXmlFile = m_mapJobID2XmlFile.value(strJobID);
+	}
+
+	QFile qFile(strXmlFile);
+	if (!qFile.open(QFile::ReadOnly | QFile::Text))
+	{
+		return QString("Open JobXmlFile '%1' failed!").arg(strXmlFile);
+	}
+	QTextStream textStream(&qFile);
+	strContent = textStream.readAll();
+	qFile.close();
+	return "Successful";
+}
+
+QString JobResolver::getProductContent( QString strProduct,QDomElement &strContent )
+{
+	if (!doesProductExist(strProduct))
+	{
+		return QString("Product '%1' dose not exist!").arg(strProduct);
+	}
+
+	{
+		QMutexLocker locker(&m_mutexPdtID2DomEle);
+		strContent = m_mapPdtID2DomEle.value(strProduct);
+	}
+
+	if (strContent.text().isEmpty())
+	{
+		return QString("Open ProductContent '%1' failed!").arg(strProduct);
+	}
+
+	return "Successful";
+}
+
+QList<Task *> JobResolver::getResolveResOnTaskList( QString strJobID )
+{
+	QList<Task *> lstTaskRes;
+	Logger *p = &(Logger::getInstance());
+
+	QString strContent;
+	QString res;
+	res = getFileContent(strJobID,strContent);
+	if ("Successful" != res)
+	{
+		p->writeInfo(res);
+		return lstTaskRes;
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		p->writeInfo("xmlDomDoc.setContent fail!");
+		return lstTaskRes;
+	}
+
+	QDomNodeList childNodeList = xmlDomDoc.elementsByTagName( "Product" );
+	for (int iNodeIndex = 0;iNodeIndex < childNodeList.size();iNodeIndex++)
+	{
+		QDomNode tmpNode = childNodeList.at(iNodeIndex);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strCurPdtID = tmpElem.text();
+
+		QDomElement domEleContent;
+		QString res;
+		res = getProductContent(strCurPdtID,domEleContent);
+		if ("Successful" != res)
+		{
+			p->writeInfo(res);
+			continue;
+		}
+
+		TaskInfo curTaskInfo;
+		QDomNodeList childProductList;
+		/////////////////////////////////////ArgDLL///////////////////////////////
+		childProductList = domEleContent.elementsByTagName( "ArgDLL" );
+		if (childProductList.isEmpty())
+		{
+			p->writeInfo("Without ArgDLL on XML!");
+			continue;
+		}
+		QString strArgDLL = childProductList.at(0).toElement().text();
+		QFileInfo qfiArgDLL(strArgDLL);
+		if (!qfiArgDLL.exists())
+		{
+			p->writeInfo(QString("File '%1' dose not exist!").arg(qfiArgDLL.absoluteFilePath()));
+			continue;
+		}
+		strcpy(curTaskInfo.libName,qPrintable(strArgDLL));
+		/////////////////////////////////////FuncName///////////////////////////////
+		childProductList = domEleContent.elementsByTagName( "FuncName" );
+		if (childProductList.isEmpty())
+		{
+			p->writeInfo("Without FuncName on XML!");
+			continue;
+		}
+		QString strFuncName = childProductList.at(0).toElement().text();
+		strcpy(curTaskInfo.funName,qPrintable(strFuncName));
+		/////////////////////////////////////FuncInType///////////////////////////////
+		childProductList = domEleContent.elementsByTagName( "FuncInType" );
+		if (childProductList.isEmpty())
+		{
+			p->writeInfo("Without FuncInType on XML!");
+			continue;
+		}
+		QString strFuncInType = childProductList.at(0).toElement().text();
+		strcpy(curTaskInfo.paraType,qPrintable(strFuncInType));
+		/////////////////////////////////////FuncInValue///////////////////////////////
+		childProductList = domEleContent.elementsByTagName( "FuncInValue" );
+		if (childProductList.isEmpty())
+		{
+			p->writeInfo("Without FuncInValue on XML!");
+			continue;
+		}
+		QString strFuncInValue = childProductList.at(0).toElement().text();
+		QStringList strlstVal = strFuncInValue.split(m_SplitMarker4Para);
+		for (int iValIndex = 0;iValIndex < strlstVal.size();iValIndex++)
+		{
+			QString strCurVal = strlstVal[iValIndex];
+			if ("MonitorDirAll" == strCurVal)
+			{
+				QMutexLocker locker(&m_mutex4DirMoniterAll);
+				strCurVal = m_lstDirMoniterAll.takeFirst();
+			}
+			strcpy(curTaskInfo.paraValue[iValIndex],qPrintable(strCurVal));
+		}
+
+		qsrand(QTime::currentTime().msec() + QTime::currentTime().minute() + QTime::currentTime().hour());
+		int tmpUid = qrand();
+		Task * newTask = new Task;
+		newTask->status = WAITING;
+		newTask->taskId = tmpUid;
+		newTask->taskInfo = curTaskInfo;
+		lstTaskRes.push_back(newTask);
+	}
+
+	return lstTaskRes;
+}
+
+QStringList JobResolver::getConditionTimeEachDay( QString strJobID )
+{
+	Logger *p = &(Logger::getInstance());
+
+	QStringList tmpStrLstRes;
+	QString strContent;
+
+	QString res;
+	{
+		p->writeInfo(res);
+		return tmpStrLstRes;
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		p->writeInfo(QString("XmlContent '%1' fail!").arg(strJobID));
+		return tmpStrLstRes;
+	}
+
+	QDateTime cTime = QDateTime::currentDateTime();
+	QString strCurMonth = cTime.toString("MM");
+	QString strCurWeek = QString("%1").arg(cTime.date().dayOfWeek());
+	QString strCurDay = cTime.toString("dd");
+	QString strCurHour = cTime.toString("hh");
+	QString strCurMinute = cTime.toString("mm");
+
+	QDomNodeList childNodeList;
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryYear" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (5 == strlstTmp.size())
+		{
+			QString strSetMonth = strlstTmp[0];
+			QString strSetDay = strlstTmp[1];
+			QString strSetHour = strlstTmp[2];
+			QString strSetMinute = strlstTmp[3];
+			QString strSetSecond = strlstTmp[4];
+
+			if (strCurMonth == strSetMonth && strCurDay == strSetDay)
+			{
+				QString strNewTime;
+				strNewTime = strSetHour + m_SplitMarker4Timer +  strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryMonth" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (4 == strlstTmp.size())
+		{
+			QString strSetDay = strlstTmp[0];
+			QString strSetHour = strlstTmp[1];
+			QString strSetMinute = strlstTmp[2];
+			QString strSetSecond = strlstTmp[3];
+
+			if (strCurDay == strSetDay)
+			{
+				QString strNewTime;
+				strNewTime = strSetHour + m_SplitMarker4Timer +  strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryWeek" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (4 == strlstTmp.size())
+		{
+			QString strSetWeek = strlstTmp[0];
+			QString strSetHour = strlstTmp[1];
+			QString strSetMinute = strlstTmp[2];
+			QString strSetSecond = strlstTmp[3];
+
+			if (strCurWeek == strSetWeek)
+			{
+				QString strNewTime;
+				strNewTime = strSetHour + m_SplitMarker4Timer +  strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryDay" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (3 == strlstTmp.size())
+		{
+			QString strSetHour = strlstTmp[0];
+			QString strSetMinute = strlstTmp[1];
+			QString strSetSecond = strlstTmp[2];
+
+			QString strNewTime;
+			strNewTime = strSetHour + m_SplitMarker4Timer +  strSetMinute + m_SplitMarker4Timer + strSetSecond;
+			tmpStrLstRes.push_back(strNewTime);
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryHour" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (2 == strlstTmp.size())
+		{
+			QString strSetMinute = strlstTmp[0];
+			QString strSetSecond = strlstTmp[1];
+
+			for (int iHourIndex = 0;iHourIndex < 24;iHourIndex++)
+			{
+				QString strNewTime;
+				if (iHourIndex < 10)
+				{
+					strNewTime = "0" + QString::number(iHourIndex) + m_SplitMarker4Timer +  strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				}
+				else
+				{
+					strNewTime = QString::number(iHourIndex) + m_SplitMarker4Timer +  strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				}
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryMinute" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (1 == strlstTmp.size())
+		{
+			QString strSetSecond = strlstTmp[0];
+
+			for (int iHourIndex = 0;iHourIndex < 24;iHourIndex++)
+			{
+				QString strNewTime;
+
+				if (iHourIndex < 10)
+				{
+					strNewTime = "0" + QString::number(iHourIndex) + m_SplitMarker4Timer;
+				}
+				else
+				{
+					strNewTime = QString::number(iHourIndex) + m_SplitMarker4Timer;
+				}
+
+				for (int iMinuteIndex = 0;iMinuteIndex < 60;iMinuteIndex++)
+				{
+					if (iMinuteIndex < 10)
+					{
+						strNewTime = "0" + QString::number(iMinuteIndex) + m_SplitMarker4Timer + strSetSecond;
+					}
+					else
+					{
+						strNewTime = QString::number(iMinuteIndex) + m_SplitMarker4Timer + strSetSecond;
+					}
+
+					tmpStrLstRes.push_back(strNewTime);
+				}
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+
+	p->writeInfo(QString("No time type match on '%1'").arg(strJobID));
+	return tmpStrLstRes;
+}
+
+QStringList JobResolver::getConditionTimeEachHour( QString strJobID )
+{
+	Logger *p = &(Logger::getInstance());
+
+	QStringList tmpStrLstRes;
+	QString strContent;
+	QString res;
+	res = getFileContent(strJobID,strContent);
+	if ("Successful" != res)
+	{
+		p->writeInfo(res);
+		return tmpStrLstRes;
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		p->writeInfo(QString("XmlContent '%1' fail!").arg(strJobID));
+		return tmpStrLstRes;
+	}
+
+	QDateTime cTime = QDateTime::currentDateTime();
+	QString strCurMonth = cTime.toString("MM");
+	QString strCurWeek = QString("%1").arg(cTime.date().dayOfWeek());
+	QString strCurDay = cTime.toString("dd");
+	QString strCurHour = cTime.toString("hh");
+	QString strCurMinute = cTime.toString("mm");
+
+	QDomNodeList childNodeList;
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryYear" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (5 == strlstTmp.size())
+		{
+			QString strSetMonth = strlstTmp[0];
+			QString strSetDay = strlstTmp[1];
+			QString strSetHour = strlstTmp[2];
+			QString strSetMinute = strlstTmp[3];
+			QString strSetSecond = strlstTmp[4];
+
+			if (strCurMonth == strSetMonth && strCurDay == strSetDay)
+			{
+				QString strNewTime;
+				strNewTime = strSetHour + m_SplitMarker4Timer +  strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryWeek" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (4 == strlstTmp.size())
+		{
+			QString strSetWeek = strlstTmp[0];
+			QString strSetHour = strlstTmp[1];
+			QString strSetMinute = strlstTmp[2];
+			QString strSetSecond = strlstTmp[3];
+
+			if (strCurWeek == strSetWeek && strCurHour == strSetHour)
+			{
+				QString strNewTime;
+				strNewTime = strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryDay" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (3 == strlstTmp.size())
+		{
+			QString strSetHour = strlstTmp[0];
+			QString strSetMinute = strlstTmp[1];
+			QString strSetSecond = strlstTmp[2];
+
+			if (strCurHour == strSetHour)
+			{
+				QString strNewTime;
+				strNewTime = strSetMinute + m_SplitMarker4Timer + strSetSecond;
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryHour" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (2 == strlstTmp.size())
+		{
+			QString strSetMinute = strlstTmp[0];
+			QString strSetSecond = strlstTmp[1];
+
+			QString strNewTime;
+			strNewTime = strSetMinute + m_SplitMarker4Timer + strSetSecond;
+			tmpStrLstRes.push_back(strNewTime);
+
+			return tmpStrLstRes;
+		}
+	}
+	childNodeList = xmlDomDoc.elementsByTagName( "EveryMinute" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strTmp = tmpElem.text();
+		QStringList strlstTmp = strTmp.split(m_SplitMarker4Timer);
+		if (1 == strlstTmp.size())
+		{
+			QString strSetSecond = strlstTmp[0];
+
+			QString strNewTime;
+			for (int iMinuteIndex = 0;iMinuteIndex < 60;iMinuteIndex++)
+			{
+				if (iMinuteIndex < 10)
+				{
+					strNewTime = "0" + QString::number(iMinuteIndex) + m_SplitMarker4Timer + strSetSecond;
+				}
+				else
+				{
+					strNewTime = QString::number(iMinuteIndex) + m_SplitMarker4Timer + strSetSecond;
+				}
+
+				tmpStrLstRes.push_back(strNewTime);
+			}
+
+			return tmpStrLstRes;
+		}
+	}
+
+	p->writeInfo(QString("No time type match on '%1'").arg(strJobID));
+	return tmpStrLstRes;
+}
+
+QDir JobResolver::getConditionDirMoniter(QString strJobID)
+{
+	Logger *p = &(Logger::getInstance());
+
+	QDir tmpDirRes;
+	QString strContent;
+	QString res;
+	res = getFileContent(strJobID,strContent);
+	if ("Successful" != res)
+	{
+		p->writeInfo(res);
+		return tmpDirRes;
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		p->writeInfo(QString("XmlContent '%1' fail!").arg(strJobID));
+		return tmpDirRes;
+	}
+
+	QDomNodeList childNodeList;
+	childNodeList = xmlDomDoc.elementsByTagName( "MonitorDir" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString tmpPath = tmpElem.text();
+		QFileInfo fi(tmpPath);
+		if (!fi.isDir() || !fi.exists()) return tmpDirRes;
+		tmpDirRes.setPath(tmpPath);
+		return tmpDirRes;
+	}
+
+	p->writeInfo(QString("No Dir type match on '%1'").arg(strJobID));
+	return tmpDirRes;
+}
+
+QList<QDir> JobResolver::getAllDir( QDir rootDir)
+{
+	QList<QDir> lstDirRes;
+	QFileInfoList rootFileInfoList = rootDir.entryInfoList();
+	//QList<QString> rootStrFile = rootDir.entryList();
+	for (int i = 0;i < rootFileInfoList.size();i++)
+	{
+		if (i < 2) continue;
+		if (rootFileInfoList[i].isDir())
+		{
+			QString	absoluteFilePath = rootFileInfoList[i].absoluteFilePath ();
+			QDir subDir(absoluteFilePath);
+			lstDirRes.push_back(subDir);
+
+			lstDirRes << getAllDir(subDir);
+		}
+	}
+	return lstDirRes;
+}
+
+QList<QDir> JobResolver::getConditionDirMoniterAll( QString strJobID )
+{
+	Logger *p = &(Logger::getInstance());
+
+	QList<QDir> lstDirRes;
+
+	QString strContent;
+	QString res;
+	res = getFileContent(strJobID,strContent);
+	if ("Successful" != res)
+	{
+		p->writeInfo(res);
+		return lstDirRes;
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		p->writeInfo(QString("XmlContent '%1' fail!").arg(strJobID));
+		return lstDirRes;
+	}
+
+	QDomNodeList childNodeList;
+	childNodeList = xmlDomDoc.elementsByTagName( "MonitorDirAll" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString tmpPath = tmpElem.text();
+		QFileInfo fi(tmpPath);
+		if (!fi.isDir() || !fi.exists()) return lstDirRes;
+		QDir rootDir = fi.dir(); 
+		lstDirRes.push_back(rootDir);//初始的一级目录
+		lstDirRes = getAllDir(rootDir);
+		return lstDirRes;
+	}
+
+	p->writeInfo(QString("No Dir type match on '%1'").arg(strJobID));
+	return lstDirRes;
+}
+
+qlonglong JobResolver::getConditionOnceMillisecond(QString strJobID)
+{
+	Logger *p = &(Logger::getInstance());
+
+	qlonglong qllMillisecond = 0;
+	QString strContent;
+	QString res;
+	res = getFileContent(strJobID,strContent);
+	if ("Successful" != res)
+	{
+		p->writeInfo(res);
+		return qllMillisecond;
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		p->writeInfo(QString("XmlContent '%1' fail!").arg(strJobID));
+		return qllMillisecond;
+	}
+
+	QDomNodeList childNodeList;
+	childNodeList = xmlDomDoc.elementsByTagName( "Once" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomElement tmpElem = tmpNode.toElement();
+		QString strMSec = tmpElem.text();
+		if ("now" == strMSec)
+		{
+			qllMillisecond = 1;
+			return qllMillisecond;
+		}
+		else
+		{
+			QStringList tmpStrLst = strMSec.split(":");
+			if (tmpStrLst.isEmpty()) return qllMillisecond;
+			if (3 != tmpStrLst.size()) return qllMillisecond;//有时间写完整的逻辑
+			qllMillisecond = tmpStrLst[0].toInt() * 3600;
+			qllMillisecond = qllMillisecond + tmpStrLst[1].toInt() * 60;
+			qllMillisecond = qllMillisecond + tmpStrLst[3].toInt();
+			return qllMillisecond;
+		}
+	}
+
+	p->writeInfo(QString("No Once type match on '%1'").arg(strJobID));
+	return qllMillisecond;
+}
+
+QString JobResolver::getConditionTypeFromXML( QString strJobID )
+{
+	Logger *p = &(Logger::getInstance());
+
+	QString strContent;
+	QString res;
+	res = getFileContent(strJobID,strContent);
+	if ("Successful" != res)
+	{
+		p->writeInfo(res);
+		return "";
+	}
+
+	QDomDocument xmlDomDoc;
+	QString errorMSG;
+	int errorLine;
+	int errorCol;
+	if (!xmlDomDoc.setContent(strContent, false, &errorMSG, &errorLine, &errorCol))
+	{
+		p->writeInfo(QString("XmlContent '%1' fail!").arg(strJobID));
+		return "";
+	}
+
+	QDomNodeList childNodeList;
+	childNodeList = xmlDomDoc.elementsByTagName( "Trigger" );
+	if (!childNodeList.isEmpty())
+	{
+		QDomNode tmpNode = childNodeList.at(0);
+		QDomNodeList tmpChdList = tmpNode.childNodes();
+		if (!tmpChdList.isEmpty())
+		{
+			QDomNode tmpChdNode = tmpChdList.at(0);
+			QDomElement tmpChdElem = tmpChdNode.toElement();
+			QString strCondition = tmpChdElem.tagName();
+			return strCondition;
+		}
+	}
+
+	p->writeInfo(QString("Get Conidtion Type Error on '%1'!").arg(strJobID));
+	return "";
+
+}
+
+QString JobResolver::addDirMoniterAll4lList( QString qdirNew )
+{
+	QMutexLocker locker(&m_mutex4DirMoniterAll);
+	m_lstDirMoniterAll.push_back(qdirNew);
+	return "Successful";
+}

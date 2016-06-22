@@ -1,0 +1,24 @@
+#include "JobScheduler.h"
+
+
+JobScheduler::JobScheduler(void)
+{
+	m_waitTDList.clear();
+}
+
+JobScheduler::~JobScheduler(void)
+{
+}
+
+void JobScheduler::pushTasksAndSort(list<Task*> lt)
+{
+	QMutexLocker locker(&mutex);
+	list<Task*>::iterator it;
+	for(it = lt.begin(); it != lt.end(); it++){
+		if((*it)->status == WAITING){
+            idebug("host = %s\n", (*it)->host);
+            m_waitTDList.push_back(*it);
+        }
+	}
+	m_waitTDList.sort(Task());
+}

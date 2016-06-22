@@ -1,0 +1,4 @@
+PTPS started on 2014.05.29_16:36:45
+2014.05.29_16:36:45 : MasterSystem strated.
+2014.05.29_16:36:45 : SlaveSystem strated.
+2014.05.29_16:36:45 : START Job 'Job_FJ_Debug'.

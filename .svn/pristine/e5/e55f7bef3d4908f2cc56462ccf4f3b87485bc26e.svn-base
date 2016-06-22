@@ -1,0 +1,121 @@
+#include <QTextCodec>
+#include <QMessageBox>
+#include <QApplication>
+#include <QSettings>
+#include <QTranslator>
+#include <QLibraryInfo>
+#include <QTime>
+#include  <QMetaType>
+
+
+
+#include "../PTPS_Master/PTPS_Master.h"
+#include "../PTPS_Slave/PTPS_Slave.h"
+#include "../common/Task.hpp"
+#include "../common/DispatcherInterface.h"
+#include "../Logger/Logger.h"
+
+#ifdef DEBUG
+    #include    "../JobManager/JobManager.h"
+    #include    "../JobScheduler/JobScheduler.h"
+#endif
+
+
+Q_DECLARE_METATYPE(Resource);
+Q_DECLARE_METATYPE(TaskInfo);
+Q_DECLARE_METATYPE(Task);
+
+int main(int argc, char **argv)
+{
+	QApplication app(argc, argv);
+
+	//初始化编码
+	QTextCodec::setCodecForLocale(QTextCodec::codecForLocale());
+	QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
+	QTextCodec::setCodecForTr(QTextCodec::codecForLocale());
+
+	//国际化
+	QTranslator myQtTranslator;
+	myQtTranslator.load(QCoreApplication::applicationDirPath()+"/language/qt_zh_CN.qm");
+	app.installTranslator(&myQtTranslator);
+
+	//加载驱动
+	//QString pluginsDir = QCoreApplication::applicationDirPath()+"/ksplugins";
+	//qApp->addLibraryPath(pluginsDir);
+
+
+	qRegisterMetaType<Resource>("Resource");
+	qRegisterMetaType<TaskInfo>("TaskInfo");
+	qRegisterMetaType<Task>("Task");
+
+	Logger *p = &(Logger::getInstance());
+	if (!p) return 0;
+	
+	QString resLogger = p->createLoggerFile(QApplication::applicationDirPath() + "/Logger");
+	if ("Successful" != resLogger)
+	{
+		return 0;
+	}
+
+	PTPS_Master* pMaster = new PTPS_Master;
+	QString resMaster = pMaster->initSystem();
+	if ("Successful" != resMaster)
+	{
+		pMaster->write2Logger(resMaster); //记录日志
+		return 0;
+	}
+	else
+	{
+		pMaster->write2Logger("MasterSystem strated."); //记录日志
+	}
+
+	PTPS_Slave* pSlave = new PTPS_Slave;
+	QString resSlave = pSlave->initSystem();
+	if ("Successful" != resSlave)
+	{
+		pSlave->write2Logger(resSlave); //记录日志
+		return 0;
+	}
+	else
+	{
+		pSlave->write2Logger("SlaveSystem strated."); //记录日志
+	}
+
+	Master2SlaveInterface* pDisMaster = pMaster->getMaster2SlaveInterface();
+    Slave2MasterInterface* pDisSlave = pSlave->getSlave2MasterInterface();
+	if ( pDisMaster && pDisSlave ){
+		QObject::connect(pDisMaster, SIGNAL(signalDispatcherTask2TaskController(Task, Resource)), pDisSlave, SIGNAL(signalDispatcherTask2TaskController(Task, Resource)));
+		QObject::connect(pDisSlave, SIGNAL(signalHandleResult2JobDispatcher(Task, Resource)), pDisMaster, SIGNAL(signalHandleResult2JobDispatcher(Task, Resource)));
+		QObject::connect(pDisSlave, SIGNAL(signalSendRes2JobDispatcher(std::string, std::list<Resource>)), pDisMaster, SIGNAL(signalSendRes2JobDispatcher(std::string, std::list<Resource>)));
+	}
+
+    pSlave->start();
+
+	//pMaster->testJob("CREATE#<?xml version=\"1.0\" encoding=\"UTF-8\"?><Job><UUID>012345699</UUID><Trigger><MonitorDirAll>C:/ProductDJ/TestDir/</MonitorDirAll></Trigger><Product>Product_Debug</Product></Job>");
+    
+	pMaster->testJob("START#Job_FJ_Debug");
+	//pMaster->testJob("START#Job_BS_Collection_Debug");
+	//pMaster->testJob("START#Job_BS_Rose_Algorithms_Debug");
+
+#ifdef DEBUG
+    Task t;
+    t.taskId = 1;
+    strcpy(t.taskInfo.libName, "/mnt/disk/radar/job_frame/lib/alg.so");
+    strcpy(t.taskInfo.funName, "alg1");
+    strcpy(t.taskInfo.paraType, "ifsd");
+    strcpy(t.taskInfo.paraValue[0], "123");
+    strcpy(t.taskInfo.paraValue[1], "2.32");
+    strcpy(t.taskInfo.paraValue[2], "abcde");
+    strcpy(t.taskInfo.paraValue[3], "22.3333333333333");
+    t.status = WAITING;
+    //pMaster->getJobManager()->getJobScheduler()->pushTask2Wait(&t);
+#endif
+
+
+	//QString sRes = pMaster->setNewTask2Slave_Master("hehe","haha");
+	//QString mRes = pSlave->setTaskFree2Master_Slave("haha","hehe");
+
+	//QObject::connect(&app, SIGNAL(aboutToQuit()), this, SLOT(shutdown()));
+
+	return app.exec();
+}

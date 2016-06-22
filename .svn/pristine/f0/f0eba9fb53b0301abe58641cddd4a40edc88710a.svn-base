@@ -1,0 +1,248 @@
+#include "JobDispatcher.h"
+#include <iostream>
+#include "../common/Task.hpp"
+#include    "../common/global_def.hpp"
+
+JobDispatcher::JobDispatcher(void)
+{
+    MAP_NODE_PROCS.clear();
+    MAP_NODE_FREE_PROCS.clear();
+}
+
+JobDispatcher::~JobDispatcher(void)
+{
+
+}
+
+QString JobDispatcher::slotPushNodeRes(string nodeName , list<Resource> resList)
+{
+    //idebug("thread is : %d\n", QThread::currentThreadId());
+	
+	QMutexLocker locker(&mutex4MAP_NODE);
+
+	map<string, list<Resource> >::iterator it = MAP_NODE_PROCS.find(nodeName);
+	if(it != MAP_NODE_PROCS.end()){
+		list<Resource> *lr = &((*it).second);
+        //lr->splice(lr->end(),resList);
+        //MAP_NODE_FREE_PROCS[nodeName].splice(MAP_NODE_FREE_PROCS[nodeName].end(), resList);
+        lr->insert(lr->end(),resList.begin(), resList.end());
+        MAP_NODE_FREE_PROCS[nodeName].insert(MAP_NODE_FREE_PROCS[nodeName].end(), resList.begin(), resList.end());
+        lr->sort();
+        lr->unique();
+        MAP_NODE_FREE_PROCS[nodeName].sort();
+        MAP_NODE_FREE_PROCS[nodeName].unique();
+        idebug("MAP_NODE_PROCS[%s].size() = %d\n", nodeName.c_str(), MAP_NODE_PROCS[nodeName].size());
+        idebug("MAP_NODE_FREE_PROCS[%s].size() = %d\n", nodeName.c_str(), MAP_NODE_FREE_PROCS[nodeName].size());
+	}else{
+		MAP_NODE_PROCS[nodeName] = resList;
+		MAP_NODE_FREE_PROCS[nodeName] = resList;
+        idebug("MAP_NODE_PROCS.size() = %d\n", MAP_NODE_PROCS.size());
+        idebug("MAP_NODE_FREE_PROCS.size() = %d\n", MAP_NODE_FREE_PROCS.size());
+	}
+	return "Successful";
+}
+
+Resource JobDispatcher::getRes()
+{
+	QMutexLocker locker(&mutex4MAP_NODE);
+
+	int max=0;
+	Resource re;
+	re.rank = -1;
+	map<string, list<Resource> >::iterator it, itEnd, itMax;
+    it = MAP_NODE_FREE_PROCS.begin(); itEnd = MAP_NODE_FREE_PROCS.end();
+    for(; it != itEnd; it++){
+        if(max < it->second.size()){
+            max = it->second.size();
+            itMax = it; 
+        }   
+    }
+
+    if(max>0) {
+
+    //list<Resource> lr = itMax->second;
+    //list<Resource>::iterator itl = lr.begin();
+    //for(   ; itl != lr.end() ; itl++ )
+    //{
+        //idebug("name = %s , rank = %d\n",itl->nodeName.toStdString().c_str(), itl->rank);
+    //}
+
+		re = itMax->second.back();
+        itMax->second.pop_back();
+	}
+	return re;
+}
+
+//bool isResEq( Resource &re1, Resource &re2)
+//{
+//	if(re1.rank == re2.rank) return true;
+//	else return false;
+//}
+
+void JobDispatcher::freeRes(string nodeName, Resource re)
+{
+	QMutexLocker locker(&mutex4MAP_NODE);
+
+	string host;
+	bool findRe = false;
+	map<string, list<Resource> >::iterator it, itEnd;
+	it = MAP_NODE_PROCS.find(nodeName);
+	itEnd = MAP_NODE_PROCS.end();
+	if(it != itEnd) {
+		list<Resource>::iterator iti = it->second.begin();
+		for(; iti != it->second.end(); iti++){
+            if(*iti == re){
+                std::cout << "free " << nodeName << " : " << iti->rank << std::endl;
+                host = it->first;
+				findRe = true;
+            }
+        }
+	}
+	if (findRe) {
+		it = MAP_NODE_FREE_PROCS.find(host);
+		it->second.push_front(re);
+	}else {
+		std::cout << "No Resource: "<< re.rank <<  " on " << nodeName << std::endl;
+		std::cout << "Please check nodeName or rank id. " << std::endl;
+	}
+}
+
+void JobDispatcher::freeRes(Resource re)
+{
+	QMutexLocker locker(&mutex4MAP_NODE);
+
+	string host;
+	bool findRe = false;
+	map<string, list<Resource> >::iterator it, itEnd;
+	it = MAP_NODE_PROCS.begin(); itEnd = MAP_NODE_PROCS.end();
+	for(; it != itEnd; it++){
+		list<Resource>::iterator iti = it->second.begin();
+		for(; iti != it->second.end(); iti++){
+            if(*iti == re){
+				host = it->first;
+                std::cout << "free Resource: " << iti->rank << " on " << host <<  std::endl;
+				findRe = true;
+            }
+        }
+	}
+	if (findRe) {
+		it = MAP_NODE_FREE_PROCS.find(host);
+		it->second.push_front(re);
+	}else {
+		std::cout << "No Resource: " << re.rank << std::endl;
+		std::cout << "Please check Resource or rank id. " << std::endl;
+	}
+}
+
+
+
+void JobDispatcher::run(){
+	Resource re;
+	Task *pt;
+	while(1){
+        sleep(1);
+		re = getRes();
+		if(re.rank == -1) 
+			continue;
+		// Get a task from JobManager.
+		pt = (emit signalApplyNewTask("applyNewTask"));
+		if (pt == 0) {
+            freeRes(re);
+            continue;
+        }
+		//Send to slave
+		emit signalDispatcherTask(*pt, re);
+
+        strcpy(pt->host, re.nodeName.toStdString().c_str());
+        idebug("host = %s\n", pt->host);
+
+		{
+			QMutexLocker locker(&runListMutex);
+			
+			m_runningTasks.push_back(pt);
+		}
+
+	}
+}
+
+string JobDispatcher::getNodeName(Resource re)
+{
+	QMutexLocker locker(&mutex4MAP_NODE);
+
+	map<string, list<Resource> >::iterator it, itEnd;
+	it = MAP_NODE_PROCS.begin(); itEnd = MAP_NODE_PROCS.end();
+	for(; it != itEnd; it++){
+		list<Resource>::iterator iti = it->second.begin();
+		for(; iti != it->second.end(); iti++){
+            if(*iti == re){
+				return it->first;
+            }else{
+				
+			}
+        }
+	}
+	std::cout << "No Resource :" << re.rank << std::endl;
+	std::cout << "Please check Resource or rank id. " << std::endl;
+	return "";
+}
+
+QString JobDispatcher::slotHandleResult(Task t, Resource re)
+{
+	if(t.status == 	FINISHED || t.status == FAILED){
+		freeRes( re);
+        
+		QMutexLocker locker(&runListMutex);
+		
+        std::list<Task*>::iterator it = m_runningTasks.begin();
+        for(   ; it != m_runningTasks.end() ; it++)
+        {
+            if( (*(*it)) == t) {
+                m_runningTasks.erase(it);
+				break;
+            }
+        }
+
+	}
+	emit signalChangeTaskState(t);
+
+	return "Successful";
+}
+
+QString JobDispatcher::slotHandleNewTask( QString )
+{
+	return "Successful";
+}
+
+
+
+QString JobDispatcher::slotRemoveRes(std::string nodeName)
+{
+	{
+		QMutexLocker locker(&mutex4MAP_NODE);
+
+		MAP_NODE_FREE_PROCS.erase(nodeName);
+		MAP_NODE_PROCS.erase(nodeName);
+		idebug("MAP_NODE_PROCS.size() = %d\n", MAP_NODE_PROCS.size());
+		idebug("MAP_NODE_FREE_PROCS.size() = %d\n", MAP_NODE_FREE_PROCS.size());
+	}
+    
+	{
+		QMutexLocker locker(&runListMutex);
+
+		std::list<Task*>::iterator it = m_runningTasks.begin();
+		std::list<Task*> lpt;
+		for(   ; it != m_runningTasks.end() ; it++ )
+		{
+			if(strcmp((*it)->host, nodeName.c_str()) == 0){
+				(*it)->status = WAITING;
+				lpt.push_back(*it);
+				m_runningTasks.erase(it);
+				if(it != m_runningTasks.end()) it--;
+				else break;
+			}
+		}
+		emit signalRedoTask(lpt);
+	}
+	
+    return "Successful";
+}

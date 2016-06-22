@@ -1,0 +1,65 @@
+#pragma once
+
+#include <QThread>
+#include <map>
+#include <list>
+#include <string>
+#include <QMutexLocker>
+#include <QMutex>
+
+
+
+#include "JobDispatcher_Global.h"
+#include "../JobScheduler/JobScheduler.h"
+
+using namespace std;
+
+class QMutex;
+class QMutexLocker;
+
+
+
+
+#include <QThread>
+
+class JOBDISPATCHER_IMPEXP JobDispatcher : public QThread
+
+{
+	Q_OBJECT
+
+public:
+	JobDispatcher(void);
+	virtual ~JobDispatcher(void);
+	void run();
+
+
+public slots:
+	QString slotHandleNewTask(QString);
+	QString slotHandleResult(Task t, Resource re);
+	QString slotPushNodeRes(std::string nodeName , std::list<Resource> resList); //子节点启动时，将子节点的资源数添加到主节点的资源列表中
+    QString slotRemoveRes(std::string nodeName);
+	
+	
+
+signals:
+	QString signalDispatcherTask(Task, Resource);
+	QString signalChangeTaskState(Task t);
+	Task* signalApplyNewTask(QString);
+    QString signalRedoTask(std::list<Task*>);
+
+
+
+
+private:
+	void freeRes(string nodeName, Resource re); //子节点任务执行完毕后，通知主节点释放使用的资源
+	void freeRes(Resource re);
+	Resource getRes(); //主节点分配任务时，先从资源列表中寻找空闲的子节点资源，并获得一个资源，没有空闲则返回的Resource中rank等于-1；
+	string getNodeName(Resource);
+
+	map<string, list<Resource> > MAP_NODE_PROCS;
+	map<string, list<Resource> > MAP_NODE_FREE_PROCS;
+	QMutex mutex4MAP_NODE;
+
+	std::list<Task*> m_runningTasks;
+    QMutex runListMutex;
+};

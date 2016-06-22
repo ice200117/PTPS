@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Job>
+	<Type>%s</Type>
+	<Trigger>
+		<Once>Now</Once>
+		<Every>
+			<EveryYear>12:31:23:59:59</EveryYear>
+			<EveryMonth>31:23:59:59</EveryMonth>
+			<EveryWeek>1:23:59:59</EveryWeek>
+			<EveryDay>23:59:59</EveryDay>
+			<EveryHour>59:59</EveryHour>
+			<EveryMinute>59</EveryMinute>
+		</Every>
+		<MonitorDir>C:/dir/</MonitorDir>
+		<MonitorDB>***</MonitorDB>
+	</Trigger>
+	<Product>ProductMutliStation1</Product>
+	<Product>ProductSingleStation1</Product>
+</Job>

@@ -1,0 +1,12 @@
+#ifndef TASKEXECUTOR_GLOBAL_H
+#define TASKEXECUTOR_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#ifdef TASKEXECUTOR_EXPORTS
+# define TASKEXECUTOR_IMPEXP Q_DECL_EXPORT
+#else
+# define TASKEXECUTOR_IMPEXP Q_DECL_IMPORT
+#endif
+
+#endif //PTPSAPP_GLOBAL_H

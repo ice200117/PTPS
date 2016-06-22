@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ProductList>
+
+	<ProductMutliStation1>		<!--MutliTask-->
+		<ArgDLL>C:/dat/test.dll</ArgDLL>
+		<FuncIn>
+			<Support>SupportArgInMutli</Support>
+		</FuncIn>
+		<FuncName>exec(string)</FuncName>
+	</ProductMutliStation1>
+	
+	<Product_Debug>
+		<ArgDLL>C:/ProductDJ/dll/FileAnalysisDll_d.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ss</FuncInType>
+		<FuncInValue>C:/ProductDJ/dll/dbconfig.ini#MonitorDirAll</FuncInValue>
+	</Product_Debug>
+
+	<Product_Release>
+		<ArgDLL>C:/ProductDJ/dll/FileAnalysisDll.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ss</FuncInType>
+		<FuncInValue>C:/ProductDJ/dll/dbconfig.ini#C:/ProductDJ/</FuncInValue>
+	</Product_Release>
+	
+	<Product_BS_Debug>
+		<ArgDLL>C:/ProductBS/dll/Rose_Algorithms.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ssssi</FuncInType>
+		<FuncInValue>Z9431#C:/ProductBS/#C:/ProductBS/OutDir/#Arith_251_R#0</FuncInValue>
+	</Product_BS_Debug>
+
+	<Product_BS_Release>
+		<ArgDLL>C:/ProductBS/dll/Rose_Algorithms.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ssssi</FuncInType>
+		<FuncInValue>C:/ProductDJ/dll/dbconfig.ini#C:/ProductDJ/</FuncInValue>
+	</Product_BS_Release>
+	
+	<Product_BS_Collection_Debug>
+		<ArgDLL>D:/project/BS_Collector_Ftp/Debug/BS_Collector_Ftp_d.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ss</FuncInType>
+		<FuncInValue>Z9431#C:/ProductBS/#C:/ProductBS/OutDir/#Arith_251_R#0</FuncInValue>
+	</Product_BS_Collection_Debug>
+
+	<Product_BS_Collection_Release>
+		<ArgDLL>D:/project/BS_Collector_Ftp/Release/BS_Collector_Ftp.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ss</FuncInType>
+		<FuncInValue>C:/ProductDJ/dll/dbconfig.ini#C:/ProductDJ/</FuncInValue>
+	</Product_BS_Collection_Release>
+	
+	
+
+</ProductList>

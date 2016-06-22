@@ -1,0 +1,8 @@
+PTPS started on 2014.05.29_16:23:24
+2014.05.29_16:23:24 : MasterSystem strated.
+2014.05.29_16:23:24 : SlaveSystem strated.
+2014.05.29_16:23:24 : START Job 'Job_FJ_Debug'.
+2014.05.29_16:23:34 : Begin 'Job_FJ_Debug'.
+2014.05.29_16:23:34 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 596589506   start!
+2014.05.29_16:23:35 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 596589506  process is be killed!
+2014.05.29_16:23:35 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 596589506   failed!

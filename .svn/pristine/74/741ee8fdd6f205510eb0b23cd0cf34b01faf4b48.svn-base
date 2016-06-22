@@ -1,0 +1,24 @@
+#include <time.h>
+#include <string.h>
+#include "Task.hpp"
+
+Task::Task(TaskInfo ti)
+{
+	//taskID = getuuid(); 
+	memset(beginTime, 0, 20) ;
+	memset(endTime, 0, 20) ;
+	memset(host, 0, DEFAULT_LEN) ;
+	mpiPid = -1;
+	pid = -1;
+	status = WAITING;
+	taskInfo = ti;
+
+	m_seconds = time(NULL);
+}
+
+int Task::calWeight()
+{
+    int wait_secs = time(NULL) - m_seconds;
+    int weight = taskInfo.priority - wait_secs/10;
+    return weight;
+}

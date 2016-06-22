@@ -1,0 +1,32 @@
+
+include ( ../qt.cmake ) 
+include (../zmq.cmake)
+include (../common.cmake )
+include (../mpi.cmake)
+
+
+
+
+IF(USE_MPI)
+    add_executable( PTPS4MASTER main.cpp)
+    target_link_libraries(PTPS4MASTER ${QT_LIBRARIES}
+    common
+    ConditionTrigger
+    Condition4Once
+    Condition4Timer
+    Condition4CycleTimer
+    Condition4DirMonitor
+    Condition4DirMonitorAll
+    CZMQ_Worker
+    Displayer
+    JobDispatcher
+    JobManager
+    JobResolver
+    JobScheduler
+    Logger
+    MasterInterfaceMPI
+    MsgReceiver
+    PTPS_Master
+    Supporter_BSH
+    )
+ENDIF(USE_MPI)

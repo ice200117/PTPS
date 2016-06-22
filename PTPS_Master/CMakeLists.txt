@@ -1,0 +1,27 @@
+include ( ../qt.cmake )
+include (../common.cmake )
+include (../zmq.cmake)
+include (../sqlite3.cmake)
+
+IF(USE_MPI)
+    include ( ../mpi.cmake )
+ENDIF(USE_MPI)
+
+
+if(MSVC) 
+  enable_language(ASM_MASM)
+  add_definitions(-DPTPS_MASTER_EXPORTS)
+endif()
+	
+
+set(Qhdrs PTPS_Master.h)
+QT4_WRAP_CPP(moc_srcs ${Qhdrs})
+add_library( PTPS_Master SHARED PTPS_Master.cpp ${moc_srcs})
+
+IF(SINGLE)
+    target_link_libraries(PTPS_Master ${QT_LIBRARIES} MsgReceiver JobManager JobDispatcher InterfaceSingle4Master common Logger JobManager)
+ENDIF(SINGLE)
+
+IF(USE_MPI)
+    target_link_libraries(PTPS_Master ${QT_LIBRARIES} MsgReceiver JobManager JobDispatcher MasterInterfaceMPI common Logger JobManager)
+ENDIF(USE_MPI)

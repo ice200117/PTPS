@@ -1,0 +1,127 @@
+#include "PTPS_Slave.h"
+
+#include <QCoreApplication>
+#include <QSettings>
+#include <QVariant>
+#include <QStringList>
+#include <QString>
+
+#include "../TaskController/TaskController.h"
+#include "../Logger/Logger.h"
+#include "../common/Task.hpp"
+#include "../common/DispatcherInterface.h"
+
+#ifdef  SINGLE
+#include "../InterfaceSingle4Slave/InterfaceSingle4Slave.h"
+#endif
+
+#ifdef  USE_MPI
+#include "../SlaveInterfaceMPI/SlaveInterfaceMPI.hpp"
+#endif
+
+PTPS_Slave::PTPS_Slave(void)
+{
+	QString exePath = QCoreApplication::applicationDirPath();
+	QString sysCPath = exePath + "/Config/SysConfig.ini";
+	QSettings sysIniRead (sysCPath, QSettings::IniFormat);
+	QString strConnectType = sysIniRead.value("ConnectType/Type").toString();
+
+	QString mpiCPath = exePath + "/Config/MPIConfig.ini";
+	QSettings mpiIniRead (mpiCPath, QSettings::IniFormat);
+	int argc = mpiIniRead.value("MPI_Arg/argc").toInt();
+	QStringList argvStrLst = mpiIniRead.value("MPI_Arg/argv").toString().split(" ");
+	char **argv  = (char**)calloc(argc, sizeof(char*));
+	for (int i = 0;i < argc;i++)
+	{
+		std::string tmpStr = argvStrLst[i].toStdString();
+		char *tmpChar = (char *)tmpStr.c_str();
+		argv[i] = tmpChar;
+	}
+}
+
+PTPS_Slave::~PTPS_Slave(void)
+{
+}
+
+QString PTPS_Slave::initSystem()
+{
+	QString strRes = "";
+	strRes = initTaskController();
+	if ( "Successful" != strRes)
+	{
+		return strRes;
+	}
+
+	strRes = initDispatcherInterface();
+	if ( "Successful" != strRes)
+	{
+		return strRes;
+	}
+
+	strRes = initConnect();
+	if ( "Successful" != strRes)
+	{
+		return strRes;
+	}
+
+	return "Successful";
+}
+
+void PTPS_Slave::start()
+{
+	m_TaskController->initRes();
+}
+
+QString PTPS_Slave::write2Logger( QString strInfo )
+{
+	Logger *p = &(Logger::getInstance());
+	if (!p) return "Logger'OBJ is NULL!";
+	return p->writeInfo(strInfo);
+}
+
+QString PTPS_Slave::initTaskController()
+{
+	m_TaskController = new TaskController();
+	return "Successful";
+}
+
+QString PTPS_Slave::initDispatcherInterface()
+{
+
+#ifdef  SINGLE
+	m_Slave2MasterInterface =  new InterfaceSingle4Slave;
+	if (!m_Slave2MasterInterface) return "InterfaceSingle4Slave'OBJ is NULL!";
+	return "Successful";
+#endif
+
+#ifdef  USE_MPI
+	m_Slave2MasterInterface =  new SlaveInterfaceMPI;
+    if (!m_Slave2MasterInterface) return "SlaveInterfaceMPI'OBJ is NULL!";
+    QString retStr = m_Slave2MasterInterface->initialize();
+    return retStr;
+#endif
+
+}
+
+QString PTPS_Slave::initConnect()
+{
+	if (!m_TaskController || !m_Slave2MasterInterface )
+	{
+		return "Obj is NULL!";
+	}
+
+	QString strRes = "connect Fail!";
+	if (!connect(m_Slave2MasterInterface,SIGNAL(signalDispatcherTask2TaskController(Task, Resource)),m_TaskController,SLOT(slotHandleNewTask(Task, Resource)),Qt::DirectConnection))
+	{
+		return strRes;
+	}
+	if (!connect(m_TaskController,SIGNAL(signalSendResult(Task, Resource)),m_Slave2MasterInterface,SLOT(slotHandleResult2Master(Task, Resource)),Qt::DirectConnection))
+	{
+		return strRes;
+	}
+	if (!connect(m_TaskController,SIGNAL(signalSendRes(QString, std::list<Resource>)),m_Slave2MasterInterface,SLOT(slotSendRes2Master(QString, std::list<Resource>)),Qt::DirectConnection))
+	{
+		return strRes;
+	}
+	return "Successful";
+}

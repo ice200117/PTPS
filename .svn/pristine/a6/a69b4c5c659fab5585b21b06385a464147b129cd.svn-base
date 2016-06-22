@@ -1,0 +1,47 @@
+/**
+ *          @file  DBInterface.hpp
+ *         @brief  
+ *        @author  liubin , ice200117@126.com
+ *          @date  2014年05月08日 09时57分29秒
+ *       @version  none
+ *          @note  
+ */
+#ifndef  DBINTERFACE_HPP
+#define  DBINTERFACE_HPP
+
+#include  <string>
+#include  <map>
+#include  <list>
+#include    "Task.hpp"
+#include    "common_global.h"
+
+using namespace std;
+
+typedef map<string, list<Task*> > JOBID2LISTTASK;
+
+
+class COMMON_EXPORT DBInterface
+{
+public:
+    DBInterface();
+    virtual ~DBInterface();
+    virtual string initialize(){return "";};
+    virtual void	uninitialize(){};
+
+    virtual int insertTasks(string JobId, list<Task*> lpt) = 0;
+    virtual int insertTask(string JobId, Task* pt) = 0;
+    virtual JOBID2LISTTASK getUnfinishedTasks() = 0;
+    virtual JOBID2LISTTASK getFailedTasks() = 0;
+    virtual JOBID2LISTTASK queryAllTasks() = 0;
+    virtual JOBID2LISTTASK queryTasksByJobId(string JobId) = 0;
+
+
+    void setDBurl(string DBurl){ m_DBurl = DBurl; };
+    string getDBurl(){ return m_DBurl; };
+
+protected:
+    string m_DBurl;
+};
+
+#endif   /* ----- #ifndef DBINTERFACE_HPP  ----- */
+

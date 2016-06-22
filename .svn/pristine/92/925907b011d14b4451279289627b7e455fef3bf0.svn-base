@@ -1,0 +1,187 @@
+/**
+ *          @file:  Task.hpp
+ *         @brief:  
+ *        @author:  liu bin , ice200117@126.com
+ *          @date:  2014年01月08日 10时59分59秒
+ *       @version:  none
+ *          @note:  
+ */
+#ifndef  TASK_HPP
+#define  TASK_HPP
+
+#include "common_global.h"
+#include  <string.h>
+#include  <string>
+#include  <QString>
+#include  <QObject>
+#include  <QDataStream>
+
+#define	DEFAULT_LEN 64
+#define	PATH_LEN 512
+#define PARA_CNT 20
+#define PARA_LEN 128
+
+//#include <uuid/uuid.h>
+
+typedef char DateTime[20];  //YYYYMMDDHHMiSS.sss
+enum TaskStatus
+{
+	WAITING = 1,
+	RUNNING,
+	FINISHED,
+	FAILED
+};
+typedef enum TaskStatus TaskStatus;
+
+/**************paraType参数中对应的类型简写，比如参数从左到右依次为short，float，则paratype应是"sf"
+b:bool
+c:char
+S:short
+i:integer
+l:long
+L:long long
+f:float
+d:double
+s:cstring
+***************/
+
+typedef struct TaskInfo TaskInfo;
+typedef struct TaskInfo// 1
+{
+
+    friend QDataStream & operator << (QDataStream &dataStream, TaskInfo &ti)
+    {
+        dataStream << ti.execType << ti.priority << ti.libName << ti.funName
+            << ti.paraType ;
+        for( int i = 0  ; i < PARA_CNT ; i++ )
+        {
+            dataStream << ti.paraValue[i];
+        }
+        return dataStream;
+    };
+    friend QDataStream & operator >> (QDataStream &dataStream, TaskInfo &ti)
+    {    
+        char *lb; // ti.libName;
+        char *fn; // ti.funName;
+        char *pt;  // ti.paraType;
+        char *pv;  // ti.paraValue[i];
+        dataStream >> ti.execType >> ti.priority >> lb >> fn >> pt ;
+        strcpy(ti.libName, lb);
+        strcpy(ti.funName, fn);
+        strcpy(ti.paraType, pt);
+        delete lb, fn, pt;
+        
+        for( int i = 0  ; i < PARA_CNT ; i++ )
+        {
+            dataStream >> pv;
+            strcpy(ti.paraValue[i], pv);
+            delete[] pv;
+        }
+        return dataStream;
+    }
+
+    int execType;
+    int priority; // 优先级 //
+    //int timer;
+    //int templateType;
+    char libName[PATH_LEN];
+	char funName[DEFAULT_LEN];
+	char paraType[PARA_CNT];
+	char paraValue[PARA_CNT][PARA_LEN];
+    //void* algPara;
+    //void* IOPath;
+}TaskInfo;
+
+/**
+ *        @class:  Task
+ *        @brief:  A job include one or many tasks.
+ *       @author:  liu bin , ice200117@126.com
+ *         @note:  
+ */
+class COMMON_EXPORT Task
+{
+public:
+	Task();
+    Task (TaskInfo ti);                             /* constructor */
+
+	bool operator<( const Task &t) const { return ( this->taskId < t.taskId);}
+	bool operator==( Task &t){ return this->taskId == t.taskId;}
+	bool operator()( Task *t1, Task *t2){	return (t1->calWeight()) < (t2->calWeight());}
+	Task& operator=( Task &t){ 
+		this->taskId = t.taskId;
+		strcpy(this->beginTime,t.beginTime);
+		strcpy(this->endTime,t.endTime);
+		strcpy(this->host,t.host);
+		this->mpiPid = t.mpiPid; //mpi process id
+		this->pid = t.pid; //process id
+		this->status = t.status; //  1 waiting, 2 running , 3 finished ok, -1: failed  	
+		this->taskInfo = t.taskInfo; // specified by user.
+		this->m_seconds = t.m_seconds; //任务创建的时间（秒）
+		return *this; 
+	}
+
+    friend QDataStream & operator << (QDataStream &dataStream, Task &t)
+    {
+        dataStream << t.taskId << t.beginTime << t.endTime << t.host << t.mpiPid
+            << t.pid << t.status << t.taskInfo <<  t.m_seconds;
+        return dataStream;
+    };
+    friend QDataStream & operator >> (QDataStream &dataStream, Task &t)
+    {
+        char *tmp;
+        dataStream >> t.taskId ;
+        dataStream >> tmp; strcpy(t.beginTime, tmp); delete[] tmp;
+        dataStream >> tmp; strcpy(t.endTime, tmp); delete[] tmp;
+        dataStream >> tmp; strcpy(t.host, tmp); delete[] tmp;
+
+        dataStream >> t.mpiPid
+            >> t.pid ;
+        int stat;
+        dataStream >> stat; t.status = (TaskStatus)stat;
+        dataStream >> t.taskInfo >>  t.m_seconds;
+        return dataStream;
+    };
+
+	int calWeight();
+
+// private:
+    int taskId;
+    DateTime beginTime;
+    DateTime endTime;
+    char host[DEFAULT_LEN];
+    int mpiPid; //mpi process id
+    int pid; //process id
+	TaskStatus status; //  1 waiting, 2 running , 3 finished ok, -1: failed  	
+
+	TaskInfo taskInfo; // specified by user.
+
+	int m_seconds; //任务创建的时间（秒）
+	//int m_weight; //根据优先级和等待的时间计算出的权重，用来对任务等待队列进行排序
+}; /* -----  end of class Task  ----- */
+
+
+//typedef struct resource Resource;
+//struct resource
+class Resource
+{
+    public:
+        Resource(){};
+	int rank;
+    QString nodeName;
+	bool operator==( Resource &t){return (this->rank == t.rank) && this->nodeName == t.nodeName;};
+    bool operator<( const Resource &t) const {return (this->rank < t.rank);}
+    friend QDataStream & operator << (QDataStream &dataStream, Resource &re)
+    {
+        dataStream << re.nodeName << re.rank;
+        return dataStream;
+    };
+    friend QDataStream & operator >> (QDataStream &dataStream, Resource &re)
+    {
+        dataStream >> re.nodeName >> re.rank;
+        return dataStream;
+    };
+};
+
+
+
+#endif   /* ----- #ifndef TASK_HPP  ----- */

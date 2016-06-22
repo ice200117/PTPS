@@ -1,0 +1,4 @@
+[ConnectType]
+Type=Single
+[SubNode]
+ResourceNum = 1

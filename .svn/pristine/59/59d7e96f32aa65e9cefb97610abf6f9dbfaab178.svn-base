@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PTPS4Slave", "PTPS4Slave\PTPS4Slave.vcxproj", "{851F5840-9C51-4EFC-8035-9057A253B936}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PTPS_Slave", "..\PTPS_Slave\PTPS_Slave.vcxproj", "{AD90D296-6FD1-4341-8953-B58C46B869D1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TaskController", "..\TaskController\TaskController.vcxproj", "{878EAC6A-3436-469B-999F-4F2801E428D2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TaskExecutor", "..\TaskExecutor\TaskExecutor.vcxproj", "{AA8EEC65-F1EA-45EC-AC62-D47E2A4B3F68}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "..\common\common.vcxproj", "{D082506B-2874-42B1-9508-4243B7B94B44}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Slave", "Slave", "{A795FDC0-0278-4B24-B995-4579F6658D18}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Slave_Tools", "Slave_Tools", "{EFDA4464-513B-44BE-A793-A3B9647AA545}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dispatcher", "Dispatcher", "{5F1669B9-C36C-4AB5-B6F0-C9348DA83ED4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{851F5840-9C51-4EFC-8035-9057A253B936}.Debug|Win32.ActiveCfg = Debug|Win32
+		{851F5840-9C51-4EFC-8035-9057A253B936}.Debug|Win32.Build.0 = Debug|Win32
+		{851F5840-9C51-4EFC-8035-9057A253B936}.Release|Win32.ActiveCfg = Release|Win32
+		{851F5840-9C51-4EFC-8035-9057A253B936}.Release|Win32.Build.0 = Release|Win32
+		{AD90D296-6FD1-4341-8953-B58C46B869D1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AD90D296-6FD1-4341-8953-B58C46B869D1}.Debug|Win32.Build.0 = Debug|Win32
+		{AD90D296-6FD1-4341-8953-B58C46B869D1}.Release|Win32.ActiveCfg = Release|Win32
+		{AD90D296-6FD1-4341-8953-B58C46B869D1}.Release|Win32.Build.0 = Release|Win32
+		{878EAC6A-3436-469B-999F-4F2801E428D2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{878EAC6A-3436-469B-999F-4F2801E428D2}.Debug|Win32.Build.0 = Debug|Win32
+		{878EAC6A-3436-469B-999F-4F2801E428D2}.Release|Win32.ActiveCfg = Release|Win32
+		{878EAC6A-3436-469B-999F-4F2801E428D2}.Release|Win32.Build.0 = Release|Win32
+		{AA8EEC65-F1EA-45EC-AC62-D47E2A4B3F68}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA8EEC65-F1EA-45EC-AC62-D47E2A4B3F68}.Debug|Win32.Build.0 = Debug|Win32
+		{AA8EEC65-F1EA-45EC-AC62-D47E2A4B3F68}.Release|Win32.ActiveCfg = Release|Win32
+		{AA8EEC65-F1EA-45EC-AC62-D47E2A4B3F68}.Release|Win32.Build.0 = Release|Win32
+		{D082506B-2874-42B1-9508-4243B7B94B44}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D082506B-2874-42B1-9508-4243B7B94B44}.Debug|Win32.Build.0 = Debug|Win32
+		{D082506B-2874-42B1-9508-4243B7B94B44}.Release|Win32.ActiveCfg = Release|Win32
+		{D082506B-2874-42B1-9508-4243B7B94B44}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{878EAC6A-3436-469B-999F-4F2801E428D2} = {A795FDC0-0278-4B24-B995-4579F6658D18}
+		{AA8EEC65-F1EA-45EC-AC62-D47E2A4B3F68} = {A795FDC0-0278-4B24-B995-4579F6658D18}
+		{AD90D296-6FD1-4341-8953-B58C46B869D1} = {A795FDC0-0278-4B24-B995-4579F6658D18}
+	EndGlobalSection
+EndGlobal

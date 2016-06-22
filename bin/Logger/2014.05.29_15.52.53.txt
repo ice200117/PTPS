@@ -1,0 +1,5 @@
+PTPS started on 2014.05.29_15:52:53
+2014.05.29_15:52:53 : MasterSystem strated.
+2014.05.29_15:52:53 : SlaveSystem strated.
+2014.05.29_15:52:53 : START Job 'Job_FJ_Debug'.
+2014.05.29_15:52:54 : /mnt/disk/PTPS/lib/FileAnalysisDll/FileAnalysisDll taskId 1752463585   is not running, taskInfo.cmd is error

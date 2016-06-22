@@ -1,0 +1,16 @@
+-I/mnt/disk/soft/qt-4.8.2/include
+-I/mnt/disk/soft/qt-4.8.2/include/QtGui
+-I/mnt/disk/soft/qt-4.8.2/include/QtXml
+-I/mnt/disk/soft/qt-4.8.2/include/QtNetwork
+-I/mnt/disk/soft/qt-4.8.2/include/QtCore
+-DUSE_MPI
+-DDEBUG
+-DQT_GUI_LIB
+-DQT_XML_LIB
+-DQT_NETWORK_LIB
+-DQT_CORE_LIB
+-DUSE_MPI
+-DDEBUG
+-o
+/mnt/disk/PTPS/SlaveInterfaceMPI/moc_SlaveInterfaceMPI.cxx
+/mnt/disk/PTPS/SlaveInterfaceMPI/SlaveInterfaceMPI.hpp

@@ -1,0 +1,319 @@
+#include <time.h>
+#include <string.h>
+#include "Task.hpp"
+
+/************ Tasko define *****************/
+
+
+Task::Task()
+{
+    memset(beginTime, 0, 20) ;
+    memset(endTime, 0, 20) ;
+    memset(host, 0, DEFAULT_LEN) ;
+    mpiPid = -1;
+    pid = -1;
+    status = WAITING;
+    //memset(&taskInfo, 0 ,sizeof(TaskInfo));
+
+    m_seconds = time(NULL);
+
+}
+
+Task::Task(TaskInfo ti)
+{
+    //taskID = getuuid(); 
+    memset(beginTime, 0, 20) ;
+    memset(endTime, 0, 20) ;
+    memset(host, 0, DEFAULT_LEN) ;
+    mpiPid = -1;
+    pid = -1;
+    status = WAITING;
+    taskInfo = ti;
+    m_seconds = time(NULL);
+}
+
+Task::~Task()
+{
+}
+
+bool Task::operator<( const Task &t) const 
+{ 
+    return ( this->taskId < t.taskId);
+}
+
+bool Task::operator==( const Task &t)
+{ 
+    return this->taskId == t.taskId;
+}
+
+bool Task::operator()( Task *t1, Task *t2)
+{	
+    return (t1->calWeight()) < (t2->calWeight());
+}
+
+Task& Task::operator=( const Task &t)
+{ 
+    if ( this != &t) {
+
+        this->taskId = t.taskId;
+        strcpy(this->beginTime,t.beginTime);
+        strcpy(this->endTime,t.endTime);
+        strcpy(this->host,t.host);
+        this->mpiPid = t.mpiPid; //mpi process id
+        this->pid = t.pid; //process id
+        this->status = t.status; //  1 waiting, 2 running , 3 finished ok, -1: failed  	
+        this->taskInfo = t.taskInfo; // specified by user.
+        this->m_seconds = t.m_seconds; //任务创建的时间（秒）
+    }
+    return *this; 
+}
+
+QDataStream & operator<< (QDataStream &dataStream, const Task &t)
+{
+    dataStream << t.taskId << t.beginTime << t.endTime << t.host << t.mpiPid
+        << t.pid << t.status << t.taskInfo <<  t.m_seconds;
+    return dataStream;
+}
+
+QDataStream & operator>> (QDataStream &dataStream, Task &t)
+{
+    char *tmp;
+    dataStream >> t.taskId ;
+    dataStream >> tmp; strcpy(t.beginTime, tmp); delete[] tmp;
+    dataStream >> tmp; strcpy(t.endTime, tmp); delete[] tmp;
+    dataStream >> tmp; strcpy(t.host, tmp); delete[] tmp;
+
+    dataStream >> t.mpiPid
+        >> t.pid ;
+    int stat;
+    dataStream >> stat; t.status = (TaskStatus)stat;
+    dataStream >> t.taskInfo >>  t.m_seconds;
+    return dataStream;
+}
+
+
+int Task::calWeight()
+{
+    int wait_secs = time(NULL) - m_seconds;
+    int weight = taskInfo.priority - wait_secs/10;
+    return weight;
+}
+
+
+
+/************ TaskInfo define *****************/
+
+TaskInfo::TaskInfo(){
+    execType = 0;
+    priority = 0; // 优先级 //
+    memset(libName, 0, PATH_LEN);
+    memset(funName,0,DEFAULT_LEN);
+    memset(paraType,0,PARA_CNT);
+    memset(paraValue, 0, PARA_CNT * PARA_LEN);
+    for(int i = 0; i< PARA_CNT; i++){
+        inputValues[i] = NULL; 
+    }
+    retLen = 0;
+    retValue = NULL;
+};
+
+TaskInfo::TaskInfo( const TaskInfo &ti )
+{
+    printf("in copy ----\n");
+    this->execType = ti.execType;
+    this->priority = ti.priority;
+    strcpy(this->libName, ti.libName);
+    strcpy(this->funName , ti.funName);
+    strcpy(this->paraType , ti.paraType);
+    for(int i = 0; i< PARA_CNT; i++){
+        strcpy(this->paraValue[i], ti.paraValue[i]);
+    }       
+    //printf("9------------%d\n",i);
+    //if(ti.inputValues[i] != NULL){
+    //idebug("%d,copy %s\n", i, ti.inputValues[i]);
+    //int len =strlen((char*)ti.inputValues[i]);
+    ////char *pc = new char[len+1];
+    //char *pc = (char*) calloc(len+1, sizeof(char));
+    //strcpy(pc, (char*)ti.inputValues[i]);
+    //this->inputValues[i] = pc;
+    //idebug("--copy %s\n", ti.inputValues[i]);
+    //}
+    if(ti.retValue && ti.retLen > 0){
+        this->retLen = ti.retLen;
+        idebug("copy %s\n", ti.retValue);
+        retValue  = (char*) calloc(ti.retLen, sizeof(char));
+        memcpy(retValue, (char*)ti.retValue, ti.retLen);
+    }else{
+        idebug("copy retLen = %d\n", ti.retLen);
+        this->retLen = 0;
+        this->retValue = NULL;
+    }
+
+}
+
+TaskInfo::~TaskInfo(){
+    if(this->retValue && this->retLen > 0){
+        free(this->retValue);
+        this->retValue = NULL;
+    }
+    //for( int i = 0  ; i < PARA_CNT ; i++ )
+    //{
+    //if(this->inputValues[i] != NULL) {
+    ////delete[] this->inputValues[i];
+    //free(this->inputValues[i]);
+    //this->inputValues[i] = NULL;
+    //}
+    //}
+}
+
+QDataStream & operator<< (QDataStream &dataStream, const TaskInfo &ti)
+{
+    dataStream << ti.execType << ti.priority << ti.libName << ti.funName
+        << ti.paraType ;
+    for( int i = 0  ; i < PARA_CNT ; i++ )
+    {
+        dataStream << ti.paraValue[i];
+    }
+    // 2014年 05月 19日 星期一 16:40:06 CST 增加通用参数支持
+    //for( int i = 0  ; i < PARA_CNT ; i++ )
+    //{
+        //if( ti.inputValues[i] ) dataStream << ti.inputValues[i];
+    //}
+    dataStream << ti.retLen;
+    if(ti.retValue && ti.retLen > 0) dataStream  << ti.retValue;
+    return dataStream;
+}
+
+QDataStream & operator>> (QDataStream &dataStream, TaskInfo &ti)
+{    
+    char *lb; // ti.libName;
+    char *fn; // ti.funName;
+    char *pt;  // ti.paraType;
+    char *pv;  // ti.paraValue[i];
+    char *tmps;
+    dataStream >> ti.execType >> ti.priority >> lb >> fn >> pt ;
+    strcpy(ti.libName, lb);
+    strcpy(ti.funName, fn);
+    strcpy(ti.paraType, pt);
+    delete[] lb, fn, pt;
+
+    for( int i = 0  ; i < PARA_CNT ; i++ )
+    {
+        dataStream >> pv;
+        strcpy(ti.paraValue[i], pv);
+        delete[] pv;
+    }
+    //for( int i = 0  ; i < PARA_CNT ; i++ )
+    //{
+        //dataStream >> tmps;
+        //ti.inputValues[i] = tmps;
+        //delete[] tmps;
+    //}
+    dataStream >> ti.retLen;
+    if(ti.retLen > 0){
+        //dataStream >> tmps;
+        //if(tmps) ti.retValue  = tmps;
+        //delete[] tmps;
+        dataStream >> ti.retValue;
+    }
+    return dataStream;
+}
+
+
+TaskInfo& TaskInfo::operator=( const TaskInfo &ti){ 
+    printf("in ========\n");
+    if ( this != &ti) {
+        this->execType = ti.execType;
+        this->priority = ti.priority;
+        strcpy(this->libName, ti.libName);
+        strcpy(this->funName , ti.funName);
+        strcpy(this->paraType , ti.paraType);
+        for(int i = 0; i< PARA_CNT; i++){
+            strcpy(this->paraValue[i], ti.paraValue[i]);
+        }       
+        //for(int i = 0; i< PARA_CNT; i++){
+        //if(ti.inputValues[i]){
+        //idebug("%s\n", ti.inputValues[i]);
+        //if(this->inputValues[i]) free(this->inputValues[i]);
+        //int len =strlen((char*)ti.inputValues[i]);
+        ////char *pc = new char[len+1];
+        //char *pc = (char*) calloc(len+1, sizeof(char));
+        //strcpy(pc, (char*)ti.inputValues[i]);
+        //this->inputValues[i] = pc;
+        //}
+        //}       
+        if(ti.retValue && ti.retLen > 0){
+            this->retLen = ti.retLen;
+            idebug("%s\n", ti.retValue);
+            if(this->retValue && this->retLen > 0) {
+                free(this->retValue);
+                this->retValue =  NULL;
+            }
+            retValue  = (char*) calloc(ti.retLen, sizeof(char));
+            memcpy(retValue, ti.retValue, ti.retLen);
+        }else{
+            idebug("retLen is %d\n", this->retLen);
+            if(this->retValue && this->retLen > 0){
+                this->retLen = 0;
+                free(this->retValue);
+                this->retValue = NULL;
+            }
+        }
+    }
+    return *this; 
+}
+
+
+int TaskInfo::setRetValue(char* str, int len)
+{
+    if(str){
+        if(this->retValue && this->retLen > 0){
+            this->retLen = 0;
+            free(this->retValue);
+            this->retValue = NULL;
+        }
+        retLen = len;
+        retValue = (char*) calloc ( (size_t)(retLen), sizeof(char) );
+        if ( retValue==NULL ) {
+            fprintf ( stderr, "\ndynamic memory allocation failed\n" );
+            exit (1);
+        }
+        memcpy(retValue, str, retLen);
+    }
+    return retLen;
+}
+
+/************ TaskInfo define *****************/
+Resource::Resource()
+{
+}
+
+bool Resource::operator==(const  Resource &t)
+{
+    return (this->rank == t.rank) && this->nodeName == t.nodeName;
+}
+
+bool Resource::operator<( const Resource &t) const 
+{
+    return (this->rank < t.rank);
+}
+
+QDataStream & operator<< (QDataStream &dataStream, const Resource &re)
+{
+    dataStream << re.nodeName << re.rank;
+    return dataStream;
+}
+
+QDataStream & operator>> (QDataStream &dataStream, Resource &re)
+{
+    dataStream >> re.nodeName >> re.rank;
+    return dataStream;
+}
+
+Resource& Resource::operator=( const Resource& r){ 
+    if ( this != &r) {
+        this->rank = r.rank;
+        this->nodeName = r.nodeName;
+    }
+    return *this; 
+}

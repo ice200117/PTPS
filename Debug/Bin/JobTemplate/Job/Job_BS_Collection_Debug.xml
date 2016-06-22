@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Job>
+	<UUID>012345699</UUID>
+	<Trigger>
+		<Cycle>00:10:00</Cycle>
+	</Trigger>
+	<Product>Product_BS_Collection_Debug</Product>
+</Job>

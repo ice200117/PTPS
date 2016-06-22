@@ -1,0 +1,227 @@
+#include "TaskExecutor.h"
+#include "dyncall.h"
+#include "dynload.h"
+#include <time.h>
+#include  <stdio.h>
+
+TaskExecutor::TaskExecutor(void)
+{
+}
+
+
+TaskExecutor::~TaskExecutor(void)
+{
+}
+
+
+void TaskExecutor::setTaskBegin(){
+  /*  m_task.pid = pid;*/
+    m_task.status = RUNNING;
+    //m_task.mpiPid = rank;
+    //strcpy(m_task.host, host);
+
+    struct tm *p; 
+    time_t timep;
+    time(&timep);
+    p = gmtime(&timep);
+    sprintf(m_task.beginTime,"%d%.2d%.2d%.2d%.2d%.2d.000",(1900+p->tm_year),
+            (1+p->tm_mon),p->tm_mday,p->tm_hour,p->tm_min,
+            p->tm_sec);
+}
+
+void TaskExecutor::setTaskEnd(int ret){
+  /*  m_task.pid = pid;*/
+	if( ret == 1){
+		m_task.status = FINISHED;
+	}else {
+		m_task.status = FAILED;
+	}
+    //m_task.mpiPid = rank;
+    //strcpy(m_task.host, host);
+
+    struct tm *p; 
+    time_t timep;
+    time(&timep);
+    p = gmtime(&timep);
+    sprintf(m_task.endTime,"%d%.2d%.2d%.2d%.2d%.2d.000",(1900+p->tm_year),
+            (1+p->tm_mon),p->tm_mday,p->tm_hour,p->tm_min,
+            p->tm_sec);
+}
+
+void TaskExecutor::run()
+{
+    //int pid = fork();
+    //if(pid == 0)
+    //{
+        //alg(m_task);
+    //}else{
+        //waitpid(pid,&status);
+        
+    //}
+
+	int ret;
+	setTaskBegin();
+	emit signalSendResult2Cont(m_task);
+	ret = alg(m_task);
+	setTaskEnd(ret);
+	emit signalSendResult2Cont(m_task);
+}
+
+int TaskExecutor::alg(Task t)
+{
+	
+    printf ( "libName = %s\n",t.taskInfo.libName);
+
+    DLLib *l = dlLoadLibrary(t.taskInfo.libName);
+    if(l == NULL){
+        printf("l is NULL\n");
+        return -1;
+    }
+
+    printf ( "funName = %s\n",t.taskInfo.funName);
+    if(strcmp(t.taskInfo.funName,"")!=0){
+        void* tf = dlFindSymbol(l, t.taskInfo.funName);
+        if(tf == NULL){
+            fprintf ( stderr, "function %s not found!\n", t.taskInfo.funName);
+            return -1;
+        }else{
+            DCCallVM* vm = dcNewCallVM(4096);
+            dcReset(vm);
+            int j=0;
+            printf ( "paraType = %s\n",t.taskInfo.paraType );
+            while(t.taskInfo.paraType[j]!=0){
+                switch ( t.taskInfo.paraType[j] ) {
+                    int k;
+                    char c;
+					/**************paraType参数中对应的类型简写，比如参数从左到右依次为short，float，则paratype应是"sf"                                                    
+					b:bool
+					c:char
+					S:short
+					i:integer
+					l:long
+					L:long long
+					f:float
+					d:double
+					s:cstring
+					***************/
+
+                    case 'i':
+                        printf( "case i\n" );
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be int. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                return -1;
+                            }
+                        }
+                        printf("paraValue[%d] = %d\n", j, atoi(t.taskInfo.paraValue[j]));
+                        dcArgInt(vm, atoi(t.taskInfo.paraValue[j]));
+                        break;
+
+                    case 'f':
+                        printf ( "case f\n" );
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0){
+                            if(!(isdigit(c) || c == 46)){
+                                printf("paraValue[%d] should be float. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                return -1;
+                            }
+                        }
+                        printf ( "paraValue[%d] = %f\n",j,atof(t.taskInfo.paraValue[j]) );
+                        dcArgFloat(vm, atof(t.taskInfo.paraValue[j]));
+                        break;
+
+                    case 's':
+                        printf ( "case s\n" );
+                        printf ( "paraValue[%d] = %s\n",j,t.taskInfo.paraValue[j] );
+                        dcArgPointer(vm, (DCpointer)t.taskInfo.paraValue[j]);
+                        break;
+
+                    case 'd':
+                        printf ( "case d\n" );
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0){
+                            if(!(isdigit(c) || (c==46)) ){
+                                printf("paraValue[%d] should be double. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                return -1;
+                            }
+                        }
+                        printf ( "paraValue[%d] = %g\n",j,atof(t.taskInfo.paraValue[j]) );
+                        dcArgDouble(vm, atof(t.taskInfo.paraValue[j]));
+                        break;
+
+                    case 'b':
+                        printf( "case b\n" );
+                        char *s;
+                        s = t.taskInfo.paraValue[j];
+                        if(strcmp(s,"false")==0) dcArgBool(vm, 1);
+                        else if(strcmp(s,"true")==0) dcArgBool(vm, 0);
+                        else {
+                            printf("paraValue[%d] should be bool(false or true). but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                            return -1;
+                        }
+                        break;
+
+                    case 'c':
+                        printf( "case c\n" );
+                        k = c = 0;
+                        if((c=t.taskInfo.paraValue[j][k++])!=0){
+                            if(!(isalpha(c))){
+                                printf("paraValue[%d] should be char. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                return -1;
+                            }
+                        }
+                        dcArgChar(vm, c);
+                        break;
+
+                    case 'S':
+                        printf( "case S\n" );
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be short. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                return -1;
+                            }
+                        }
+                        printf("paraValue[%d] = %d\n", j, atoi(t.taskInfo.paraValue[j]));
+                        dcArgShort(vm, (short)atoi(t.taskInfo.paraValue[j]));
+                        break;
+                    
+                    case 'l':
+                        printf( "case l\n" );
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be long. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                return -1;
+                            }
+                        }
+                        printf("paraValue[%d] = %d\n", j, atol(t.taskInfo.paraValue[j]));
+                        dcArgLong(vm, (long)atol(t.taskInfo.paraValue[j]));
+                        break;
+
+                    case 'L':
+                        printf( "case L\n" );
+                        k = c = 0;
+                        while((c=t.taskInfo.paraValue[j][k++])!=0 ){
+                            if(!isdigit(c)){
+                                printf("paraValue[%d] should be long long. but paraValue[%d] is %s\n",j, j, t.taskInfo.paraValue[j]);
+                                return -1;
+                            }
+                        }
+                        printf("paraValue[%d] = %d\n", j, atol(t.taskInfo.paraValue[j]));
+                        dcArgLongLong(vm, (long long)atol(t.taskInfo.paraValue[j]));
+                        break;
+
+                    default:	
+                        break;
+                }				/* -----  end switch  ----- */
+                j++;
+            }
+            // Call function in lib.
+            dcCallVoid(vm, tf);
+            dcFree(vm);
+        }
+    }
+    return 1;
+}

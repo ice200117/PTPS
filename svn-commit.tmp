@@ -1,0 +1,25 @@
+
+--此行及以下内容将会被忽略--
+
+M    CMakeLists.txt
+M    MasterInterfaceMPI/MasterInterfaceMPI.cpp
+M    PTPS_Master/PTPS_Master.cpp
+A    ZMQ_BROKER
+A    ZMQ_BROKER/CMakeFiles
+A    ZMQ_BROKER/CMakeFiles/CMakeDirectoryInformation.cmake
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/C.includecache
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/DependInfo.cmake
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/build.make
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/cmake_clean.cmake
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/depend.internal
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/depend.make
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/flags.make
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/link.txt
+A    ZMQ_BROKER/CMakeFiles/ZMQ_BROKER.dir/progress.make
+A    ZMQ_BROKER/CMakeFiles/progress.marks
+A    ZMQ_BROKER/CMakeLists.txt
+A    ZMQ_BROKER/Makefile
+A    ZMQ_BROKER/cmake_install.cmake
+AM   ZMQ_BROKER/mdbroker.c
+AM   ZMQ_BROKER/mdp.h

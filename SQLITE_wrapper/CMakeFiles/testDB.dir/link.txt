@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/testDB.dir/testDB.cpp.o  -o testDB -rdynamic ../bin/libcommon.so ../bin/libSQLITE_wrapper.so ../bin/libcommon.so /mnt/disk/soft/qt-4.8.2/lib/libQtGui.so /mnt/disk/soft/qt-4.8.2/lib/libQtXml.so /mnt/disk/soft/qt-4.8.2/lib/libQtNetwork.so /mnt/disk/soft/qt-4.8.2/lib/libQtCore.so -lsqlite3 -Wl,-rpath,/mnt/disk/PTPS/bin:/mnt/disk/soft/qt-4.8.2/lib 

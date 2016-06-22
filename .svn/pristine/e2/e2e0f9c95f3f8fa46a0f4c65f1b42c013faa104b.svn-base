@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Job>
+	<UUID>012345699</UUID>
+	<Trigger>
+		<MonitorDir>C:/ProductDJ/</MonitorDir>
+	</Trigger>
+	<Product>Product_Release</Product>
+</Job>

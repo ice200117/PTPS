@@ -1,0 +1,13 @@
+include ( ../qt.cmake )
+include (../common.cmake )
+include (../dyncall.cmake)
+
+if(MSVC) 
+  enable_language(ASM_MASM)
+  add_definitions(-DTASKEXECUTOR_EXPORTS )
+endif()
+
+set(Qhdrs TaskExecutor.h)
+QT4_WRAP_CPP(moc_srcs ${Qhdrs})
+add_library( TaskExecutor SHARED TaskExecutor.cpp ${moc_srcs})
+target_link_libraries(TaskExecutor ${QT_LIBRARIES} common )

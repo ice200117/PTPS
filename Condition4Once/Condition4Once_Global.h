@@ -1,0 +1,12 @@
+#ifndef CONDITION4ONCE_GLOBAL_H
+#define CONDITION4ONCE_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#ifdef CONDITION4ONCE_EXPORTS
+# define CONDITION4ONCE_IMPEXP Q_DECL_EXPORT
+#else
+# define CONDITION4ONCE_IMPEXP Q_DECL_IMPORT
+#endif
+
+#endif

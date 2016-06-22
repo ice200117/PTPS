@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ProductList>
+
+	<ProductMutliStation1>		<!--MutliTask-->
+		<ArgDLL>C:/dat/test.dll</ArgDLL>
+		<FuncIn>
+			<Support>SupportArgInMutli</Support>
+		</FuncIn>
+		<FuncName>exec(string)</FuncName>
+	</ProductMutliStation1>
+
+	<Product_Debug>
+		<ArgDLL>C:/ProductDJ/dll/FileAnalysisDll_d.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ss</FuncInType>
+		<FuncInValue>C:/ProductDJ/dll/dbconfig.ini#MonitorDirAll</FuncInValue>
+	</Product_Debug>
+
+	<Product_Release>
+		<ArgDLL>C:/ProductDJ/dll/FileAnalysisDll.dll</ArgDLL>
+		<FuncName>execArge</FuncName>
+		<FuncInType>ss</FuncInType>
+		<FuncInValue>C:/ProductDJ/dll/dbconfig.ini#C:/ProductDJ/</FuncInValue>
+	</Product_Release>
+
+</ProductList>

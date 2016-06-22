@@ -1,0 +1,178 @@
+/**
+ *          @file:  SlaveCommnicator.cpp
+ *         @brief:  
+ *        @author:  liu bin , ice200117@126.com
+ *          @date:  2014年04月17日 15时13分24秒
+ *       @version:  none
+ *          @note:  
+ */
+
+#include  <QDataStream>
+
+#include    "SlaveCommnicator.hpp"
+#include    "../common/Serialization.hpp"
+#include "../common/global_def.hpp"
+
+#include <string>
+using namespace std;
+
+SlaveCommnicator::SlaveCommnicator(MPI_Comm mc): m_mc(mc)
+{ 
+    m_pmi = NULL; 
+    m_runnable = true;
+}
+
+SlaveCommnicator::SlaveCommnicator(MPI_Comm mc, MasterInterfaceMPI *pmi): m_mc(mc), m_pmi(pmi)
+{ 
+    m_runnable = true;
+}
+
+SlaveCommnicator::~SlaveCommnicator()
+{
+    if(m_timer){
+        delete m_timer;
+    }
+}
+
+
+void SlaveCommnicator::run()
+{
+    while( true )
+    {
+        if(m_runnable){
+            listenSlave();
+        }else{
+            break;
+        }
+    }
+    idebug("Comm : %d exit run !", (int)m_mc);
+}
+
+
+void SlaveCommnicator::send(Task t, Resource re)
+{
+    Serialization se;
+    QByteArray ba = se.serialize(t, re);
+
+    mutex.lock();
+    m_smsglen = ba.size();
+    memcpy(m_sb, ba.data(), m_smsglen);
+    send();
+    mutex.unlock();
+}
+
+void SlaveCommnicator::send()
+{
+    int flag=0;
+
+    if( m_smsglen>0 )
+    {
+        MPI_Send(m_sb,m_smsglen,MPI_CHAR,0,flag,m_mc);
+        printf("Send to Slave: %s Successful!\n", m_nodeName.c_str());
+        idebug("send len = %d", m_smsglen);
+    }
+
+}
+
+int SlaveCommnicator::recv()
+{
+    int merr;
+    int flag;
+    MPI_Status stat;
+    //idebug("%s\n", "Master is waiting recv....");
+    //先验证一下具体的客户端进程以及所传递的消息信息
+    
+    MPI_Comm_test_inter(m_mc, &flag);
+    if(!flag) {
+        idebug("flag = %d\n", flag);
+        return flag;
+    }
+    MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,m_mc,&flag, &stat);
+    if(flag){
+        MPI_Get_count(&stat,MPI_CHAR,&m_rmsglen);
+        //从客户端接收数据
+        MPI_Recv(m_rb,m_rmsglen,MPI_CHAR,stat.MPI_SOURCE,stat.MPI_TAG,m_mc,&stat);
+        printf("Recv from Slave: %s Successful!\n", m_nodeName.c_str());
+
+        idebug("recv len = %d", m_rmsglen);
+    }
+    return flag;
+
+}
+
+void SlaveCommnicator::listenSlave()
+{
+    int flag = recv();
+
+    if(flag){
+        Serialization se;
+        InfoType it = se.deserialize(m_rb, m_rmsglen);
+        std::list<Resource> lr;
+        Task t;
+        Resource re;
+
+        switch ( it )
+        {
+            case SendResource :
+                // 解析子节点资源的消息内容
+                m_nodeName = se.nodeName().toStdString();
+                lr = se.lr();
+                if(m_pmi) emit m_pmi->signalSendRes2JobDispatcher(m_nodeName,lr);
+                else printf("Please set MasterInterfaceMPI Obj!\n");
+
+                m_pmi->m_mapNodeName2Comm[m_nodeName] = this;
+                break;
+            case SendTask :
+                // 解析Task的消息内容
+                t = se.t();
+                re = se.re();
+                idebug("%d\n", t.status);
+                idebug("%s\n", re.nodeName.toStdString().c_str());
+                idebug("rank = %d\n", re.rank);
+                if(m_pmi) emit m_pmi->signalHandleResult2JobDispatcher(t, re);
+                else printf("Please set MasterInterfaceMPI Obj!\n");
+                break;
+            case SendHeartBeat :
+                m_t.restart();
+                break;
+            default :
+                printf("No case %d in InfoType.\n", it);
+                break;
+        }
+    }
+}
+
+void SlaveCommnicator::startHeartBeat()
+{
+    m_t = QTime::currentTime();
+    m_t.start();
+    idebug("%s\n", "start heart beat ....");
+    m_timer = new QTimer(this);
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(slotHeartBeat()));
+    connect(this, SIGNAL(signalRemoveSlave(std::string)), m_pmi, SLOT(slotRemoveSlave(std::string)), Qt::QueuedConnection);
+    m_timer->start(m_timeval);
+}
+
+void SlaveCommnicator::slotHeartBeat()
+{
+    idebug("%s, Comm : %d \n", "in heart beat ....", (int)m_mc);
+    int et = m_t.elapsed();    
+    idebug(" et = %d \n", et);
+    if( et > 100+m_timeval ){
+        // 删掉没有心跳的节点资源，重置该节点上正在运行的任务.
+        disconnect(m_timer, SIGNAL(timeout()), this, SLOT(slotHeartBeat()));
+        emit signalRemoveSlave(m_nodeName);
+        disconnect(this, SIGNAL(signalRemoveSlave(std::string)), m_pmi, SLOT(slotRemoveSlave(std::string)));
+        return;
+    }
+    Serialization se;
+    InfoType ift = SendHeartBeat;
+    QByteArray ba = se.serialize(ift);
+    mutex.lock();
+    m_smsglen = ba.size();
+    memcpy(m_sb, ba.data(), m_smsglen);
+    send();
+    mutex.unlock();
+}
+
+

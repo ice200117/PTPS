@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Job>
+	<UUID>012345699</UUID>
+	<Trigger>
+		<Every>
+			<EveryMinute>00</EveryMinute>
+		</Every>
+	</Trigger>
+	<Product>Product_BS_Collection_Debug</Product>
+</Job>

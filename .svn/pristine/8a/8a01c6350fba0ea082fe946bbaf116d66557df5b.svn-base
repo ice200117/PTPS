@@ -1,0 +1,66 @@
+#include "Logger.h"
+
+QAtomicPointer<Logger> Logger::s_instance = new Logger;
+QMutex Logger::s_mutexLogger;//ÊµÀý»¥³âËø
+
+#include <QMutexLocker>
+#include <QTime>
+#include <QCoreApplication>
+#include <QDateTime>
+#include <QFile>
+#include <QTextStream>
+#include <QFileInfo>
+#include <QDir>
+
+Logger::Logger(void)
+{
+	
+}
+
+Logger::~Logger( void )
+{
+
+}
+
+QString Logger::createLoggerFile( QString strLoggerPath )
+{
+	QFileInfo qFI(strLoggerPath);
+	if (!qFI.exists())
+	{
+		QDir makeDir;
+		makeDir.mkpath(strLoggerPath);
+	}
+	//QString strLoggerPath = QCoreApplication::applicationFilePath() + "/Logger/";
+	QString strLoggerName = QDateTime::currentDateTime().toString("yyyy.MM.dd_hh.mm.ss") + ".txt";
+	m_strLoggerFilePath = strLoggerPath + "/" + strLoggerName;
+
+	QFile file(m_strLoggerFilePath);
+
+	if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate |QIODevice::Text))
+		return "Logger File create fail!";
+	QTextStream out(&file);
+	out.setCodec("UTF-8");
+	out << "PTPS started on " + QDateTime::currentDateTime().toString("yyyy.MM.dd_hh:mm:ss");
+	out<< "\r\n";
+	file.close();
+
+	return "Successful";
+}
+
+QString Logger::writeInfo( QString strInfo )
+{
+	QString strDateTime = QDateTime::currentDateTime().toString("yyyy.MM.dd_hh:mm:ss");
+	QMutexLocker locker(&s_mutexLogger);
+
+	QFile file(m_strLoggerFilePath);
+	if (!file.open(QIODevice::WriteOnly|QIODevice::Append))
+	{
+		return "Logger File not exist!";
+	}
+	QTextStream out(&file);
+	out << QString("%1 : %2").arg(strDateTime).arg(strInfo);
+	out<< "\r\n";
+	file.close(); 
+
+	return "Successful";
+}

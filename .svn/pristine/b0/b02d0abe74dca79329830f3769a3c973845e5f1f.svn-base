@@ -1,0 +1,82 @@
+#include "TaskController.h"
+#include <QHostInfo>
+#include <iostream>
+#include <QMetaType>
+#include  <QDateTime>
+
+
+TaskController::TaskController(void)
+{
+	
+}
+
+TaskController::~TaskController(void)
+{
+
+}
+
+void TaskController::initRes()
+{
+	//获取子节点的机器名。
+	m_nodeName = QHostInfo::localHostName();
+    QDateTime dt = QDateTime::currentDateTime();
+    QTime t = dt.time();
+    QString timestamp = dt.toString(Qt::ISODate) + t.toString(".zzz");
+    m_nodeName += "_" + timestamp;
+	//设置最大资源数，也就是子节点可以运行的最大任务。
+    m_maxNumRes = 1;
+	//初始化子节点的资源列表
+	for(int i=0; i<m_maxNumRes; i++){
+		Resource r;
+        r.nodeName = m_nodeName;
+		r.rank = i;
+		m_listRes.push_back(r);
+	}
+	emit signalSendRes(m_nodeName, m_listRes);
+}
+
+QString TaskController::slotHandleNewTask( Task t, Resource r)
+{
+	QMutexLocker locker(&mutex);
+	if(m_mapTaskRes.find(t) == m_mapTaskRes.end()) {
+		//Task不存在
+		if(m_mapResTask.find(r) == m_mapResTask.end()){
+			//资源r没有被占用
+			strcpy(t.host, m_nodeName.toLocal8Bit());
+			t.mpiPid = r.rank;
+			m_mapTaskRes[t] = r;
+			m_mapResTask[r] = t;
+		}else{
+			//资源被占用，请检查主节点任务分配功能模块，资源管理出错。
+			std::cout << "Resoucre is busy, Please check JobDispatcher" << std::endl;
+			return "failed";
+		}
+	}else{
+		//Task已经存在
+	}
+
+	TaskExecutor *pte = new TaskExecutor(t);
+	qRegisterMetaType<Task>("Task");
+	QObject::connect(pte, SIGNAL(signalSendResult2Cont(Task)), this, SLOT(slotHandleResult(Task)));
+	m_mapTaskpTaskExe[t] = pte;
+	pte->start();
+	return "Successful";
+}
+
+
+QString TaskController::slotHandleResult(Task t)
+{
+	QMutexLocker locker(&mutex);
+	TaskExecutor *pte = m_mapTaskpTaskExe[t];
+	Resource r = m_mapTaskRes[t];
+	if(t.status != RUNNING ){
+		pte->disconnect();
+		pte->wait();
+		delete pte;
+		m_mapTaskpTaskExe.erase(t);
+		m_mapTaskRes.erase(t);
+		m_mapResTask.erase(r);
+	}
+	emit signalSendResult(t, r);
+	return "Successful";
+}

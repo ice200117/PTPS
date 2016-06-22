@@ -1,0 +1,1 @@
+/usr/bin/cc  -g    CMakeFiles/ZMQ_BROKER.exe.dir/mdbroker.c.o  -o ../bin/ZMQ_BROKER.exe  -L/mnt/disk/soft/zmq/lib  -L/mnt/disk/soft/czmq/lib -rdynamic -lzmq -lczmq -Wl,-rpath,/mnt/disk/soft/zmq/lib:/mnt/disk/soft/czmq/lib 

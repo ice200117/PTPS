@@ -1,0 +1,68 @@
+#include "ConditionTrigger.h"
+
+#include "../JobResolver/JobResolver.h"
+#include "../common/ConditionInterface.h"
+
+#include "../Condition4DirMonitor/Condition4DirMonitor.h"
+#include "../Condition4Once/Condition4Once.h"
+#include "../Condition4Timer/Condition4Timer.h"
+#include "../Condition4DirMonitorAll/Condition4DirMonitorAll.h"
+#include "../Condition4CycleTimer/Condition4CycleTimer.h"
+
+ConditionTrigger::ConditionTrigger(void)
+{
+	m_listConditionObj.push_back(new Condition4DirMonitor);
+	m_listConditionObj.push_back(new Condition4Once);
+	m_listConditionObj.push_back(new Condition4Timer);
+	m_listConditionObj.push_back(new Condition4DirMonitorAll);
+	m_listConditionObj.push_back(new Condition4CycleTimer);
+	this->_pJobResolver = 0;
+}
+
+ConditionTrigger::~ConditionTrigger(void)
+{
+	for (int i = 0;i < m_listConditionObj.size();i++)
+	{
+		delete m_listConditionObj[i];
+	}
+	m_listConditionObj.clear();
+}
+
+QString ConditionTrigger::initConditionTrigger()
+{
+	if (!this->_pJobResolver) return "_pJobResolver is NULL!";
+
+	for (int i = 0;i < m_listConditionObj.size();i++)
+	{
+		m_listConditionObj[i]->_pJobResolver = this->_pJobResolver;
+		connect(m_listConditionObj[i],SIGNAL(signalExecJobOnCondition(QString)),this,SIGNAL(signalExecJob(QString)),Qt::QueuedConnection);
+	}
+
+	return "Successful";
+}
+
+QString ConditionTrigger::createNewConditionJob( QString strJob)
+{
+	QString strCondType = this->_pJobResolver->getConditionTypeFromXML(strJob);
+	for (int i = 0;i < m_listConditionObj.size();i++)
+	{
+		if (m_listConditionObj[i]->getConditionType() == strCondType)
+		{
+			return m_listConditionObj[i]->createNewConditionJob(strJob);
+		}
+	}
+	return QString("JobID Not Match! %1").arg(strJob);
+}
+
+QString ConditionTrigger::deleteExistConditionJob( QString strJob)
+{
+	QString strCondType = this->_pJobResolver->getConditionTypeFromXML(strJob);
+	for (int i = 0;i < m_listConditionObj.size();i++)
+	{
+		if (m_listConditionObj[i]->getConditionType() == strCondType)
+		{
+			return m_listConditionObj[i]->deleteExistConditionJob(strJob);
+		}
+	}
+	return QString("JobID Not Match! %1").arg(strJob);
+}

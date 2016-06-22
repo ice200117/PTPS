@@ -1,0 +1,70 @@
+/**
+ *          @file:  MasterInterfaceMPI.hpp
+ *         @brief:  
+ *        @author:  liu bin , ice200117@126.com
+ *          @date:  2014年04月04日 16时11分44秒
+ *       @version:  none
+ *          @note:  
+ */
+#ifndef  MASTERINTERFACEMPI_HPP
+#define  MASTERINTERFACEMPI_HPP
+
+#include <QtCore/qglobal.h>
+#include  <QObject>
+#include  <QThread>
+#include  <map>
+
+#include    "../common/Task.hpp"
+#include    "../common/DispatcherInterface.h"
+
+#ifdef MASTERINTERFACEMPI_EXPORTS
+# define MASTERINTERFACEMPI_IMPEXP Q_DECL_EXPORT
+#else
+# define MASTERINTERFACEMPI_IMPEXP Q_DECL_IMPORT
+#endif
+
+
+using namespace std;
+
+class SlaveCommnicator;
+
+class MASTERINTERFACEMPI_IMPEXP MasterInterfaceMPI : public Master2SlaveInterface
+{
+    Q_OBJECT
+    friend class SlaveCommnicator;
+public:
+    MasterInterfaceMPI(void);
+	~MasterInterfaceMPI(void);
+
+	void run();
+
+    //void  listenSlave();
+    void acceptSlave();
+    void removeSlave(string);
+    QString initialize();
+    void uninitialize();
+
+public slots:
+    QString slotDispatcherTask2Slave(Task*, Resource);
+
+    QString slotRemoveSlave(std::string nodeName);
+
+signals:
+	//QString signalHandleResult2JobDispatcher(Task, Resource);
+	//QString signalSendRes2JobDispatcher(std::string, std::list<Resource>);
+
+	//QString signalRemoveRes2JobDispatcher(std::string);
+
+private:
+    char m_portName[1024];
+    char m_servName[256];
+    char m_errmsg[1024];
+    int m_argc;
+    char ** m_argv;
+    int m_msglen;
+
+    map<string, SlaveCommnicator*> m_mapNodeName2Comm;
+};
+
+#endif   /* ----- #ifndef MASTERINTERFACEMPI_HPP  ----- */
+

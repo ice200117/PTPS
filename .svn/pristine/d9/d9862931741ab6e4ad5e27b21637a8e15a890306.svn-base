@@ -1,0 +1,480 @@
+/**
+*          @file  SQLITE_wrapper.cpp
+*         @brief  
+*        @author  liubin , ice200117@126.com
+*          @date  2014年05月08日 10时30分22秒
+*       @version  none
+*          @note  
+*/
+
+#include    "SQLITE_wrapper.hpp"
+#include    "sqlite3.h"
+#include    "stdio.h"
+#include  <vector>
+#include  <string.h>
+#include  <assert.h>
+#include    "../common/global_def.hpp"
+#include  <QDate>
+#include <QMutex>
+#include <QMutexLocker>
+
+static sqlite3* db;
+static const int n_column = 18;
+static const char keys[n_column][18] = { "taskId",    
+	"beginTime", 
+	"endTime",   
+	"host",      
+	"mpiPid",    
+	"pid",       
+	"threadId",
+	"status",    
+	"execType",  
+	"cmd",
+	"timeout",
+	"priority",  
+	"libName",   
+	"funName",   
+	"paraType",          
+	"paraValue", 
+	"m_seconds", 
+	"JobId"};
+static const char types[n_column+1] = "dsssddddddddssssds";
+
+static QMutex s_qMutex4EverFunc;
+
+int insertGeneric(
+	sqlite3 *db,
+	const char *table,
+	const char keys[18][18],
+	const char *types,
+	vector<string> values,
+	int n_column
+	)
+{
+	QMutexLocker locker(&s_qMutex4EverFunc);
+
+	string sql;
+	int result;
+	sqlite3_stmt *stmt;
+	int id;
+
+	sql = "";
+	sql += "SELECT " ;
+	sql += keys[0];
+	sql += " FROM ";
+	sql += table;
+	sql += " WHERE ";
+	sql += keys[0];
+	sql += " = ";
+	sql += values[0];
+	sql += " ;";
+	//idebug ( "sql = %s\n", sql.c_str() );
+
+	result = sqlite3_prepare_v2( db, sql.c_str(), strlen( sql.c_str() ), &stmt, NULL );
+	assert( result == SQLITE_OK );
+
+	if ( sqlite3_step( stmt ) == SQLITE_ROW ) {
+		/*  a key/value was found in table, query the ROWID */
+		id = sqlite3_column_int( stmt, 0 );
+		assert( sqlite3_step( stmt ) == SQLITE_DONE );
+		sqlite3_finalize( stmt );
+
+		sql = "";
+		sql += "UPDATE ";
+		sql += table; sql += " SET ";
+		string tmps;
+		for( int i = 1 ; i < n_column; i++ )
+		{
+			switch ( types[i] )
+			{
+			case 'd' :
+				tmps = values[i];
+				break;
+			case 's' :
+				tmps = "'";
+				tmps += values[i];
+				tmps += "'";
+				break;
+			default :
+				break;
+			}
+			sql += keys[i]; sql += "="; sql += tmps;
+			if(i != n_column-1) sql += ", ";
+		}
+		sql += " WHERE ";
+		sql += keys[0]; sql +="="; sql += values[0];
+		sql += ";";
+		idebug ( "sql = %s\n", sql.c_str() );
+		result = sqlite3_exec( db, sql.c_str(), NULL, NULL, NULL );
+		assert( result == SQLITE_OK );
+	} else {
+		/*  key/value is not in table, so insert it */
+		sqlite3_finalize( stmt );
+		sql = "";
+		sql += "INSERT INTO ";
+		sql += table;
+		sql += "( ";
+		for( int i = 0 ; i < n_column ; i++ )
+		{
+			sql += keys[i];
+			if(i != n_column-1) sql += ",";
+		}
+		sql += " )VALUES( ";
+		string tmps;
+		for( int i = 0 ; i < n_column ; i++ )
+		{
+			switch ( types[i] )
+			{
+			case 'd' :
+				tmps = values[i];
+				break;
+			case 's' :
+				tmps = "'";
+				tmps += values[i];
+				tmps += "'";
+				break;
+			default :
+				break;
+			}
+			sql += tmps;
+			if(i != n_column-1) sql += ",";
+		}
+		sql += " );";
+
+		idebug ( "sql = %s\n", sql.c_str() );
+		result = sqlite3_exec( db, sql.c_str(), NULL, NULL, NULL );
+		assert( result == SQLITE_OK );
+	}
+	return result;
+}
+
+
+JOBID2LISTTASK queryTasks(vector<TaskStatus> vt, vector<string> vjob, string table)
+{
+	QMutexLocker locker(&s_qMutex4EverFunc);
+
+	JOBID2LISTTASK j2lt;
+	string sql;
+	sqlite3_stmt *stmt;
+	int result;
+	char tmpcs[10];
+
+	j2lt.clear();
+	if( vt.size() <= 0 )
+	{
+		return j2lt;
+	}
+
+	sql = "SELECT JobId FROM ";
+	sql += table;
+	sql += " GROUP BY JobId;";
+	result = sqlite3_prepare_v2( db, sql.c_str(), strlen( sql.c_str() ), &stmt, NULL );
+	assert( result == SQLITE_OK );
+
+	while( sqlite3_step( stmt ) == SQLITE_ROW ) {
+		char *ts = (char*)sqlite3_column_blob(stmt, 0);
+		idebug("%s\n", ts);
+		sqlite3_stmt *stmt_t;
+		if( vjob.size() > 0) 
+			if(find(vjob.begin(), vjob.end(), string(ts)) == vjob.end()) continue;
+
+		sql = "SELECT * FROM ";
+		sql += table;
+		sql += " WHERE (status = ";
+
+		for( int i = 0 ; i < vt.size() ; i++ )
+		{
+			memset(tmpcs, 0, 10);
+			sprintf(tmpcs, "%d", vt[i]);
+			sql += tmpcs;
+			if( i != vt.size() -1){
+				sql += " OR status = ";
+			}
+		}
+		sql += ") AND JobId = '";
+		sql += ts;
+		sql += "';";
+		idebug("sql = %s\n", sql.c_str());
+		result = sqlite3_prepare_v2( db, sql.c_str(), strlen( sql.c_str() ), &stmt_t, NULL );
+		assert( result == SQLITE_OK );
+
+		list<Task*> lpt;
+		Task* pt;
+		while( sqlite3_step( stmt_t ) == SQLITE_ROW ) {
+			pt = new Task;
+			//memset(pt, 0, sizeof(Task));
+			pt->taskId  = sqlite3_column_int64( stmt_t, 0 );
+			if(char *str = (char*)sqlite3_column_blob( stmt_t, 1 ) )
+				strcpy(pt->beginTime,  str);
+			if(char *str = (char*)sqlite3_column_blob( stmt_t, 2 ) )
+				strcpy(pt->endTime, str);
+			if(char *str = (char*)sqlite3_column_blob( stmt_t, 3 ))
+				strcpy(pt->host, str);
+			pt->mpiPid  = sqlite3_column_int( stmt_t, 4 );
+			pt->pid  = sqlite3_column_int( stmt_t, 5 );
+			pt->threadId  = sqlite3_column_int( stmt_t, 6 );
+			pt->status  = (TaskStatus)sqlite3_column_int( stmt_t, 7 );
+			pt->taskInfo.execType  = sqlite3_column_int( stmt_t, 8 );
+			pt->taskInfo.cmd= sqlite3_column_int( stmt_t, 9 );
+			pt->taskInfo.timeout = sqlite3_column_int( stmt_t, 10 );
+			pt->taskInfo.priority  = sqlite3_column_int( stmt_t, 11 );
+			if(char *str = (char*)sqlite3_column_blob( stmt_t, 12 ))
+				strcpy(pt->taskInfo.libName, str);
+			if(char *str = (char*)sqlite3_column_blob( stmt_t, 13 ))
+				strcpy(pt->taskInfo.funName, str);
+			if(char *str = (char*)sqlite3_column_blob( stmt_t, 14 ))
+				strcpy(pt->taskInfo.paraType, str);
+			int num_para;
+			char *pk = strchr(pt->taskInfo.paraType, ')');
+			if(pk != 0){
+				num_para = int(pk - pt->taskInfo.paraType);
+			}else{
+				num_para = strlen(pt->taskInfo.paraType);
+			}
+			if(char *str = (char*)sqlite3_column_blob( stmt_t, 15 )){
+				idebug("%s\n", str);
+				char *saveptr;
+				for( int i = 0 ; i < num_para ; i++ )
+				{
+
+#ifdef  _WINDOWS
+					if( char* subs = strtok_s(str, "#", &saveptr) )
+						strcpy(pt->taskInfo.paraValue[i], subs);
+
+#else      /* -----  not _WINDOWS  ----- */
+					if( char* subs = strtok_r(str, "#", &saveptr) )
+						strcpy(pt->taskInfo.paraValue[i], subs);
+#endif     /* -----  not _WINDOWS  ----- */
+					str = NULL;
+				}
+			}
+			pt->m_seconds  = sqlite3_column_int( stmt_t, 16 );
+
+			idebug("taskId = %lld\n", pt->taskId);
+			lpt.push_back(pt);
+		}
+		sqlite3_finalize( stmt_t );
+		if( lpt.size() > 0 )
+		{
+			j2lt[ts] = lpt;
+		}
+	}
+
+	sqlite3_finalize( stmt );
+
+	return j2lt;
+}
+
+SQLITE_wrapper::SQLITE_wrapper ()
+{
+	initialize();
+}
+
+SQLITE_wrapper::~SQLITE_wrapper ()
+{
+	uninitialize();
+}
+
+int SQLITE_wrapper::openDB (  )
+{
+	QMutexLocker locker(&s_qMutex4EverFunc);
+
+	int ret;
+	ret = sqlite3_open(m_DBurl.c_str(),&db);
+	if(ret != SQLITE_OK){
+		fprintf(stderr,"Cannot open db: %s\n",sqlite3_errmsg(db));
+		return 1;
+	}
+	idebug("%s %s\n", "Open database", m_DBurl.c_str());
+	return 0;
+}		/* -----  end of method SQLITE_wrapper::openDB  ----- */
+
+
+int SQLITE_wrapper::closeDB()
+{
+	QMutexLocker locker(&s_qMutex4EverFunc);
+
+	sqlite3_close(db);
+	return 0;
+}
+
+
+int SQLITE_wrapper::createTaskTable ( )
+{
+	QMutexLocker locker(&s_qMutex4EverFunc);
+
+	int ret;
+	string sql_create_table = "CREATE TABLE IF NOT EXISTS ";
+	sql_create_table += m_taskTableName;
+	//idebug("%s\n", sql_create_table.c_str());
+	string subStr = "(taskId INT8 PRIMARY KEY NOT NULL UNIQUE, beginTime CHAR(20), endTime CHAR(20), host VCHAR(64), mpiPid INT, pid INT, threadId INT, status INT, execType INT, cmd INT, timeout INT, priority INT, libName VCHAR(512), funName VCHAR(64), paraType CHAR(20), paraValue TEXT, m_seconds INT, JobId VCHAR(64));";
+	sql_create_table += subStr;
+	//idebug("%s\n", sql_create_table.c_str());
+	ret = sqlite3_exec(db,sql_create_table.c_str(),NULL,NULL,NULL);
+	if(ret != SQLITE_OK){
+		fprintf(stderr,"create table %s failed!\n", m_taskTableName.c_str());
+		return -1;
+	}
+	return 0;
+}		/* -----  end of method SQLITE_wrapper::createTaskTable  ----- */
+
+
+string SQLITE_wrapper::initialize (  )
+{
+	QDate qd= QDate::currentDate();
+	string d = qd.toString("yyyyMMdd").toStdString();
+	m_DBurl = "PTPS_";
+	//m_DBurl += d;
+	m_DBurl += ".db";
+	m_taskTableName = "tasks_";
+	m_taskTableName += d;
+	openDB();
+	createTaskTable();
+	return "Successful";
+}		/* -----  end of method SQLITE_wrapper::initialize  ----- */
+
+void  SQLITE_wrapper::uninitialize (  )
+{
+	closeDB();
+}		/* -----  end of method SQLITE_wrapper::uninitialize  ----- */
+
+
+int SQLITE_wrapper::insertTasks(string JobId, list<Task*> lpt)
+{
+	int ret;
+	list<Task*>::iterator it = lpt.begin();
+	for(   ; it != lpt.end() ; it++ )
+	{
+		ret = insertTask(JobId, *it);
+	}
+	return ret;
+}
+
+int SQLITE_wrapper::insertTask(string JobId, Task* pt)
+{
+	int ret;
+	vector<string> values;
+	char tmps[512];
+	string s;
+
+	// 1. taskId
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%lld", pt->taskId);
+	values.push_back(tmps);
+	// 2. beginTime
+	values.push_back(pt->beginTime);
+	// 3. endTime
+	values.push_back(pt->endTime);
+	// 4. host 
+	values.push_back(pt->host);
+	// 5. mpiPid 
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->mpiPid);
+	values.push_back(tmps);
+	// 6. pid
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->pid);
+	values.push_back(tmps);
+	// 7. pid
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->threadId);
+	values.push_back(tmps);
+	// 8. status    
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->status);
+	values.push_back(tmps);
+	// 9. execType
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->taskInfo.execType);
+	values.push_back(tmps);
+	// 10. cmd 
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->taskInfo.cmd);
+	values.push_back(tmps);
+	// 11. timeout 
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->taskInfo.timeout);
+	values.push_back(tmps);
+	// 12. priority
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->taskInfo.priority);
+	values.push_back(tmps);
+	// 13. libName
+	values.push_back(pt->taskInfo.libName);
+	// 14. funName
+	values.push_back(pt->taskInfo.funName);
+	// 15. paraType
+	values.push_back(pt->taskInfo.paraType);
+	// 16. paraValue
+	int num_para;
+	char *pk = strchr(pt->taskInfo.paraType, ')');
+	if(pk != 0){
+		num_para = int(pk - pt->taskInfo.paraType);
+	}else{
+		num_para = strlen(pt->taskInfo.paraType);
+	}
+	s = "";
+	for( int i = 0 ; i < num_para ; i++ )
+	{
+		s += pt->taskInfo.paraValue[i];
+		if(i != num_para-1 ) s += '#';
+	}
+	values.push_back(s);
+	// 17. m_seconds
+	memset(tmps, 0, 512);
+	sprintf(tmps,"%d", pt->m_seconds);
+	values.push_back(tmps);
+	// 18. JobId
+	values.push_back(JobId);
+
+	createTaskTable();
+	ret = insertGeneric( db, m_taskTableName.c_str(), keys, types, values, n_column);
+
+	return ret;
+}
+
+
+
+JOBID2LISTTASK SQLITE_wrapper::queryUnfinishedTasks()
+{
+	vector<TaskStatus> vt;
+	vector<string> vj;
+	vt.clear(); vj.clear();
+	vt.push_back(WAITING);
+	vt.push_back(RUNNING);
+	return queryTasks(vt, vj, m_taskTableName);
+}
+
+JOBID2LISTTASK SQLITE_wrapper::queryFailedTasks()
+{
+	vector<TaskStatus> vt;
+	vector<string> vj;
+	vt.clear(); vj.clear();
+	vt.push_back(FAILED);
+	return queryTasks(vt, vj, m_taskTableName);
+}
+
+JOBID2LISTTASK SQLITE_wrapper::queryAllTasks()
+{
+	vector<TaskStatus> vt;
+	vector<string> vj;
+	vt.clear(); vj.clear();
+	vt.push_back(WAITING);
+	vt.push_back(RUNNING);
+	vt.push_back(FINISHED);
+	vt.push_back(FAILED);
+	return queryTasks(vt, vj, m_taskTableName);
+}
+
+JOBID2LISTTASK SQLITE_wrapper::queryTasksByJobId(string JobId)
+{
+	vector<TaskStatus> vt;
+	vector<string> vj;
+	vt.clear(); vj.clear();
+	vt.push_back(WAITING);
+	vt.push_back(RUNNING);
+	vt.push_back(FINISHED);
+	vt.push_back(FAILED);
+	vj.push_back(JobId);
+	return queryTasks(vt, vj, m_taskTableName);
+}

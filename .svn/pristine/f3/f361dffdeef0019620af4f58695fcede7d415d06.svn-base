@@ -1,0 +1,145 @@
+/**
+ *          @file:  Task.hpp
+ *         @brief:  
+ *        @author:  liu bin , ice200117@126.com
+ *          @date:  2014年01月08日 10时59分59秒
+ *       @version:  none
+ *          @note:  
+ */
+#ifndef  TASK_HPP
+#define  TASK_HPP
+
+#include  <string.h>
+#include  <string>
+#include  <QString>
+#include  <QObject>
+#include  <QDataStream>
+
+#include "common_global.h"
+#include    "global_def.hpp"
+
+#define	DEFAULT_LEN 64
+#define	PATH_LEN 512
+#define PARA_CNT 20
+#define PARA_LEN 128
+
+
+typedef char DateTime[20];  //YYYYMMDDHHMiSS.sss
+enum TaskStatus
+{
+    WAITING = 1,
+    RUNNING,
+    FINISHED,
+    FAILED,
+    PAUSED
+};
+typedef enum TaskStatus TaskStatus;
+
+
+typedef struct ReturnGenType ReturnGenType;
+struct ReturnGenType {
+    int len; // void* p 所指地址包含的数据长度，不包含len本身的4个字节。
+    void* p;
+};				/* ----------  end of struct ReturnGenType  ---------- */
+
+
+/**************paraType参数中对应的类型简写，比如参数从左到右依次为short，float，则paratype应是"sf", 参数和返回值之间用')'分割
+c:char
+S:short
+i:integer
+l:long
+L:long long
+f:float
+d:double
+s:cstring == char* 
+p:void* //通用类型
+):输入参数和返回值的分隔符
+v:void //没有返回值，仅返回值中可用
+ ***************/
+
+class COMMON_EXPORT TaskInfo// 1
+{
+
+public:
+    TaskInfo();
+    TaskInfo( const TaskInfo &ti );
+    ~TaskInfo();
+    
+    TaskInfo& operator=( const TaskInfo &ti);
+    friend QDataStream & operator << (QDataStream &dataStream, const TaskInfo &ti);
+    friend QDataStream & operator >> (QDataStream &dataStream, TaskInfo &ti);
+
+    int setRetValue(void* str, int len);
+    void* getRetValue(int &len){ len = retLen; return retValue; }
+    int setInputValues(void* pIn[PARA_CNT], int len[PARA_CNT]);
+    void** getInputValues(int (&len)[PARA_CNT]); 
+    int setInputValue(void* pIn, int len, int index);
+    void* getInputValue(int &len, int index) { len = inputLens[index]; return inputValues[index] ; }
+
+
+    int execType; // 0=dll, 1=exe
+    int cmd; // 0=start&continue, 1=stop
+    int timeout; //任务运行的最大时间 ,单位为秒
+    int priority; // 优先级 //
+    char libName[PATH_LEN];
+    char funName[DEFAULT_LEN];
+    char paraType[PARA_CNT];
+    char paraValue[PARA_CNT][PARA_LEN];
+
+private:
+    int inputLens[PARA_CNT]; //指定inputValues对应index的参数长度
+    void* inputValues[PARA_CNT]; //传递所有的参数类型
+    int retLen;  //指定retValue的长度
+    void* retValue; //传递所有的返回类型
+};
+
+/**
+ *        @class:  Task
+ *        @brief:  A job include one or many tasks.
+ *       @author:  liu bin , ice200117@126.com
+ *         @note:  
+ */
+class COMMON_EXPORT Task
+{
+    public:
+        Task();
+        Task (TaskInfo ti);                             /* constructor */
+        ~Task();
+
+        bool operator<( const Task &t) const; 
+        bool operator==( const Task &t);
+        bool operator()( Task *t1, Task *t2);
+        Task& operator=( const Task &t); 
+
+        friend QDataStream & operator << (QDataStream &dataStream, const Task &t);
+        friend QDataStream & operator >> (QDataStream &dataStream, Task &t);
+        
+        int calWeight();
+
+        int taskId;
+        DateTime beginTime;
+        DateTime endTime;
+        char host[DEFAULT_LEN];
+        int mpiPid; //mpi process id
+        int pid; //process id
+        int threadId;
+        TaskStatus status; //  1 waiting, 2 running , 3 finished ok, -1: failed  	
+        TaskInfo taskInfo; // specified by user.
+        int m_seconds; //任务创建的时间（秒）
+}; /* -----  end of class Task  ----- */
+
+class COMMON_EXPORT Resource
+{
+    public:
+        Resource();
+        int rank;
+        QString nodeName;
+        bool operator==(const  Resource &t);
+        bool operator<( const Resource &t) const;
+        friend QDataStream & operator << (QDataStream &dataStream, const Resource &re);
+        friend QDataStream & operator >> (QDataStream &dataStream, Resource &re);
+
+        Resource& operator=( const Resource& r); 
+};
+
+#endif   /* ----- #ifndef TASK_HPP  ----- */

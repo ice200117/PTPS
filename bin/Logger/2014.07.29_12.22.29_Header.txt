@@ -1,0 +1,44 @@
+Logger created on 2014.07.29_12:22:29
+2014.07.29_12:22:29 : PTPS started
+2014.07.29_12:22:30 : MasterSystem strated.
+2014.07.29_12:22:30 : SlaveSystem strated.
+2014.07.29_12:22:30 : WorkJobList.ini not exists! using default.
+2014.07.29_12:22:31 : ready signalApplyNewTask!
+2014.07.29_12:22:31 : finish signalApplyNewTask!
+2014.07.29_12:22:31 : /mnt/disk/radar/job_frame/lib/alg.so taskId 2141438647111   start!
+2014.07.29_12:22:31 : /mnt/disk/radar/job_frame/lib/alg.so taskId 2141438647111   finished!
+2014.07.29_12:22:31 : /mnt/disk/radar/job_frame/lib/alg.so taskId 2141438647111   TaskExecutor::run() lastline!
+2014.07.29_12:22:31 : Finished TaskId: '2141438647111'.
+2014.07.29_12:22:31 : /mnt/disk/radar/job_frame/lib/alg.so taskId 2141438647111   TaskExecutor'Obj delete!
+2014.07.29_12:22:32 : ready signalApplyNewTask!
+2014.07.29_12:22:32 : finish signalApplyNewTask!
+2014.07.29_12:22:33 : ready signalApplyNewTask!
+2014.07.29_12:22:33 : finish signalApplyNewTask!
+2014.07.29_12:22:34 : ready signalApplyNewTask!
+2014.07.29_12:22:34 : finish signalApplyNewTask!
+2014.07.29_12:22:35 : ready signalApplyNewTask!
+2014.07.29_12:22:35 : finish signalApplyNewTask!
+2014.07.29_12:22:36 : ready signalApplyNewTask!
+2014.07.29_12:22:36 : finish signalApplyNewTask!
+2014.07.29_12:22:37 : ready signalApplyNewTask!
+2014.07.29_12:22:37 : finish signalApplyNewTask!
+2014.07.29_12:22:38 : ready signalApplyNewTask!
+2014.07.29_12:22:38 : finish signalApplyNewTask!
+2014.07.29_12:22:39 : ready signalApplyNewTask!
+2014.07.29_12:22:39 : finish signalApplyNewTask!
+2014.07.29_12:22:40 : ready signalApplyNewTask!
+2014.07.29_12:22:40 : finish signalApplyNewTask!
+2014.07.29_12:22:41 : ready signalApplyNewTask!
+2014.07.29_12:22:41 : finish signalApplyNewTask!
+2014.07.29_12:22:42 : ready signalApplyNewTask!
+2014.07.29_12:22:42 : finish signalApplyNewTask!
+2014.07.29_12:22:43 : ready signalApplyNewTask!
+2014.07.29_12:22:43 : finish signalApplyNewTask!
+2014.07.29_12:22:44 : ready signalApplyNewTask!
+2014.07.29_12:22:44 : finish signalApplyNewTask!
+2014.07.29_12:22:45 : ready signalApplyNewTask!
+2014.07.29_12:22:45 : finish signalApplyNewTask!
+2014.07.29_12:22:46 : ready signalApplyNewTask!
+2014.07.29_12:22:46 : finish signalApplyNewTask!
+2014.07.29_12:22:47 : ready signalApplyNewTask!
+2014.07.29_12:22:47 : finish signalApplyNewTask!

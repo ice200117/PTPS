@@ -1,0 +1,12 @@
+#ifndef MSGRECEIVER_GLOBAL_H
+#define MSGRECEIVER_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#ifdef MSGRECEIVER_EXPORTS
+# define MSGRECEIVER_IMPEXP Q_DECL_EXPORT
+#else
+# define MSGRECEIVER_IMPEXP Q_DECL_IMPORT
+#endif
+
+#endif //PTPSAPP_GLOBAL_H

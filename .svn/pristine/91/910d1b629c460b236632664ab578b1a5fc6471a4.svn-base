@@ -1,0 +1,57 @@
+#pragma once
+#include "JobScheduler_Global.h"
+
+#include "../common/Task.hpp"
+#include "../common/global_def.hpp"
+
+#include <list>
+
+#include <QAtomicPointer>
+#include <QMutexLocker>
+#include <QMutex>
+#include  <iostream>
+class QMutex;
+class QMutexLocker;
+
+using namespace std;
+
+class JOBSCHEDULER_IMPEXP JobScheduler
+{
+public:
+	JobScheduler(void);
+	virtual ~JobScheduler(void);
+
+
+
+	void pushTask2Wait(Task *pt)
+	{
+		QMutexLocker locker(&mutex);
+        if( pt->status == WAITING) m_waitTDList.push_back(pt);
+		m_waitTDList.sort(Task());
+	}
+	void sortWaitList()
+	{
+		QMutexLocker locker(&mutex);
+		m_waitTDList.sort(Task());
+	}
+
+	void pushTasksAndSort(list<Task*> lt);
+
+	Task* getWaitTask()
+	{
+		QMutexLocker locker(&mutex);
+		
+		if(m_waitTDList.size() > 0){
+			Task *pt = m_waitTDList.front(); 
+			m_waitTDList.pop_front();
+            idebug( "%s\n", "have task....................");
+            return pt;
+		}else{
+			return NULL;
+		}
+	}
+
+private:
+	list< Task* > m_waitTDList;
+	QMutex mutex;
+};

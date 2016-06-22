@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SupportDir>
+	<Meth>Today</Meth>
+	<TargetDir>C:\dat\YYYY\MM\DD\[0-9]{2}</TargetDir>
+	<File1>test1YYYYMMDD[0-9]{2}.dat</File1>
+</SupportDir>
+
+<SupportDirLast>
+	<Meth>Today</Meth>
+	<TargetDir>C:\dat\YYYY\MM\DD\[0-9]{2}</TargetDir>
+	<File1>test1YYYYMMDD[0-9]{2}.dat</File1>
+	<SeaFile1>test1YYYYMMDD[0-9]{2}.dat</SeaFile1>
+	<SeaDir1>test1YYYYMMDD[0-9]{2}.dat</SeaDir1>
+</SupportDirLast>
+
+<ProductOut>
+	<OutMeth>Dir</OutMeth>
+	<FilrDir>C:\dat\</FilrDir>
+</ProductOut>
+
+<SupportArgInMutli>
+	<Support>
+		SupportDirLast
+	</Support>
+	<Time>Now</Time>
+</SupportArgInMutli>
+
+<SupportArgInSingle>
+	<Support>
+		SupportDirLast
+	</Support>
+	<Time>Now</Time>
+</SupportArgInSingle>

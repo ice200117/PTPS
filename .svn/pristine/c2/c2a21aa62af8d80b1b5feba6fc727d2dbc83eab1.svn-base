@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ProductMutliStation1>		<!--MutliTask-->
+	<ArgDLL>C:\dat\test.dll</ArgDLL>
+	<FuncIn>
+		<Support>
+			SupportArgInMutli
+		</Support>
+	</FuncIn>
+	<FuncName>exec(string)</FuncName>
+</ProductMutliStation1>
+
+<ProductSingleStation1>
+	<ArgDLL>C:\dat\test.dll</ArgDLL>
+	<FuncIn>aaa</FuncIn>
+	<FuncName>exec</FuncName>
+</ProductSingleStation1>

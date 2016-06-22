@@ -1,0 +1,1 @@
+/usr/bin/cc  -fPIC -g   -shared -Wl,-soname,libCZMQ_Worker.so -o ../bin/libCZMQ_Worker.so CMakeFiles/CZMQ_Worker.dir/mdwrkapi.c.o  -L/mnt/disk/soft/zmq/lib  -L/mnt/disk/soft/czmq/lib -lzmq -lczmq -Wl,-rpath,/mnt/disk/soft/zmq/lib:/mnt/disk/soft/czmq/lib 

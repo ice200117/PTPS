@@ -1,0 +1,12 @@
+#ifndef JOBSCHEDULER_GLOBAL_H
+#define JOBSCHEDULER_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#ifdef JOBSCHEDULER_EXPORTS
+# define JOBSCHEDULER_IMPEXP Q_DECL_EXPORT
+#else
+# define JOBSCHEDULER_IMPEXP Q_DECL_IMPORT
+#endif
+
+#endif //PTPSAPP_GLOBAL_H

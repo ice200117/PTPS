@@ -1,0 +1,7 @@
+PTPS started on 2014.06.24_14:35:13
+2014.06.24_14:35:17 : MasterSystem strated.
+2014.06.24_14:35:17 : SlaveSystem strated.
+2014.06.24_14:35:17 : Job 'Job_BS_Collection_Debug' dose not exist!
+2014.06.24_14:35:17 : JobID Not Match! Job_BS_Collection_Debug
+2014.06.24_14:35:18 : /mnt/disk/radar/job_frame/lib/alg.so taskId 2141438647111   start!
+2014.06.24_14:35:29 : /mnt/disk/radar/job_frame/lib/alg.so taskId 2141438647111   finished!

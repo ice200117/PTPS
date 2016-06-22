@@ -1,0 +1,12 @@
+#ifndef SUPPORTER_BSH_GLOBAL_H
+#define SUPPORTER_BSH_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#ifdef SUPPORTER_BSH_EXPORTS
+# define SUPPORTER_BSH_IMPEXP Q_DECL_EXPORT
+#else
+# define SUPPORTER_BSH_IMPEXP Q_DECL_IMPORT
+#endif
+
+#endif //SUPPORTER_BSH_GLOBAL_H

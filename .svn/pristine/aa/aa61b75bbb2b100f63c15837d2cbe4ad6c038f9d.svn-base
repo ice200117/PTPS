@@ -1,0 +1,64 @@
+#pragma once
+#include "JobResolver_Global.h"
+
+#include <QString>
+#include <QHash>
+#include <QMap>
+#include <QMutex>
+#include <QDomElement>
+#include <QDir>
+#include <QList>
+
+#include "../common/Task.hpp"
+
+class QDomNode;
+class QDomElement;
+
+class JOBRESOLVER_IMPEXP JobResolver
+{
+public:
+	JobResolver(void);
+	virtual ~JobResolver(void);
+
+	QList<Task *> getResolveResOnTaskList( QString strJobID );
+
+	QString getConditionTypeFromXML(QString);
+
+	bool doesJobExist( QString strJobID );
+	bool doesProductExist( QString strJobID );
+
+	bool isJob4Type( QString strJobID, QString strType );
+
+	QString upDataJobXmlList();
+
+	QStringList getConditionTimeEachDay( QString strJobID );
+	QStringList getConditionTimeEachHour( QString strJobID );
+	QDir getConditionDirMoniter(QString strJobID);
+	QList<QDir> getConditionDirMoniterAll(QString strJobID);
+	qlonglong getConditionOnceMillisecond(QString strJobID);
+
+	QString addDirMoniterAll4lList(QString qdirNew);
+
+protected:
+	QString initJobXmlList();
+	QString initProductXmlList();
+
+	QString getFileContent(QString strFile,QString &strContent);
+	QString getProductContent( QString strProduct,QDomElement &strContent );
+
+	QList<QDir> getAllDir(QDir);
+
+private:
+	QMap<QString,QString> m_mapJobID2XmlFile;
+	QMutex m_mutexJobID2XmlFile;
+
+	QMap<QString,QDomElement> m_mapPdtID2DomEle;
+	QMutex m_mutexPdtID2DomEle;
+
+	QString m_SplitMarker4Timer;
+	QString m_SplitMarker4Para;
+
+	////////////////////////////////////////////////////
+	QMutex m_mutex4DirMoniterAll;
+	QList<QString> m_lstDirMoniterAll;
+};

@@ -1,0 +1,16 @@
+-I/mnt/disk/soft/qt-4.8.2/include
+-I/mnt/disk/soft/qt-4.8.2/include/QtGui
+-I/mnt/disk/soft/qt-4.8.2/include/QtXml
+-I/mnt/disk/soft/qt-4.8.2/include/QtNetwork
+-I/mnt/disk/soft/qt-4.8.2/include/QtCore
+-DSINGLE
+-DDEBUG
+-DQT_GUI_LIB
+-DQT_XML_LIB
+-DQT_NETWORK_LIB
+-DQT_CORE_LIB
+-DSINGLE
+-DDEBUG
+-o
+/mnt/disk/PTPS/Condition4Timer/moc_Condition4Timer.cxx
+/mnt/disk/PTPS/Condition4Timer/Condition4Timer.h

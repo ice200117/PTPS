@@ -1,0 +1,38 @@
+#pragma once
+#include "TaskController_Global.h"
+#include "../common/Task.hpp"
+#include <QThread>
+#include <list>
+#include <map>
+#include "../TaskExecutor/TaskExecutor.h"
+#include <QMutexLocker>
+#include <QMutex>
+
+class TASKCONTROLLER_IMPEXP TaskController : public QThread
+{
+	Q_OBJECT
+
+public:
+	TaskController(void);
+	TaskController(int maxNumRes) : m_maxNumRes(maxNumRes){};
+	virtual ~TaskController(void);
+	void initRes(); //配置子节点资源数，并通过signalSendRes信号告知主节点
+
+signals:
+	QString signalSendResult(Task, Resource);
+	QString signalSendRes(QString, std::list<Resource>);
+
+public slots:
+	QString slotHandleNewTask(Task t, Resource r);
+	QString slotHandleResult(Task t);
+
+private:
+	int m_maxNumRes;
+	std::list<Resource> m_listRes;
+	QString m_nodeName;
+	std::map<Task, Resource> m_mapTaskRes;
+	std::map<Resource, Task> m_mapResTask;
+	std::map<Task, TaskExecutor*> m_mapTaskpTaskExe;
+	QMutex mutex;
+};
+

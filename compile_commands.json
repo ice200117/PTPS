@@ -1,0 +1,247 @@
+[
+{
+  "directory": "/mnt/disk/PTPS/common",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -Dcommon_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/common.dir/Task.cpp.o -c /mnt/disk/PTPS/common/Task.cpp",
+  "file": "/mnt/disk/PTPS/common/Task.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/common",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -Dcommon_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/common.dir/Serialization.cpp.o -c /mnt/disk/PTPS/common/Serialization.cpp",
+  "file": "/mnt/disk/PTPS/common/Serialization.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/common",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -Dcommon_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/common.dir/moc_DispatcherInterface.cxx.o -c /mnt/disk/PTPS/common/moc_DispatcherInterface.cxx",
+  "file": "/mnt/disk/PTPS/common/moc_DispatcherInterface.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/common",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -Dcommon_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/common.dir/moc_ConditionInterface.cxx.o -c /mnt/disk/PTPS/common/moc_ConditionInterface.cxx",
+  "file": "/mnt/disk/PTPS/common/moc_ConditionInterface.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/common",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -Dcommon_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/common.dir/DBInterface.cpp.o -c /mnt/disk/PTPS/common/DBInterface.cpp",
+  "file": "/mnt/disk/PTPS/common/DBInterface.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Logger",
+  "command": "/usr/bin/c++   -DDEBUG -DLogger_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Logger.dir/Logger.cpp.o -c /mnt/disk/PTPS/Logger/Logger.cpp",
+  "file": "/mnt/disk/PTPS/Logger/Logger.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Logger",
+  "command": "/usr/bin/c++   -DDEBUG -DLogger_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Logger.dir/moc_Logger.cxx.o -c /mnt/disk/PTPS/Logger/moc_Logger.cxx",
+  "file": "/mnt/disk/PTPS/Logger/moc_Logger.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobResolver",
+  "command": "/usr/bin/c++   -DDEBUG -DJobResolver_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobResolver.dir/JobResolver.cpp.o -c /mnt/disk/PTPS/JobResolver/JobResolver.cpp",
+  "file": "/mnt/disk/PTPS/JobResolver/JobResolver.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobResolver",
+  "command": "/usr/bin/c++   -DDEBUG -DJobResolver_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobResolver.dir/moc_JobResolver.cxx.o -c /mnt/disk/PTPS/JobResolver/moc_JobResolver.cxx",
+  "file": "/mnt/disk/PTPS/JobResolver/moc_JobResolver.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4DirMonitor",
+  "command": "/usr/bin/c++   -DCondition4DirMonitor_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4DirMonitor.dir/Condition4DirMonitor.cpp.o -c /mnt/disk/PTPS/Condition4DirMonitor/Condition4DirMonitor.cpp",
+  "file": "/mnt/disk/PTPS/Condition4DirMonitor/Condition4DirMonitor.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4DirMonitor",
+  "command": "/usr/bin/c++   -DCondition4DirMonitor_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4DirMonitor.dir/moc_Condition4DirMonitor.cxx.o -c /mnt/disk/PTPS/Condition4DirMonitor/moc_Condition4DirMonitor.cxx",
+  "file": "/mnt/disk/PTPS/Condition4DirMonitor/moc_Condition4DirMonitor.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4DirMonitorAll",
+  "command": "/usr/bin/c++   -DCondition4DirMonitorAll_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4DirMonitorAll.dir/Condition4DirMonitorAll.cpp.o -c /mnt/disk/PTPS/Condition4DirMonitorAll/Condition4DirMonitorAll.cpp",
+  "file": "/mnt/disk/PTPS/Condition4DirMonitorAll/Condition4DirMonitorAll.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4DirMonitorAll",
+  "command": "/usr/bin/c++   -DCondition4DirMonitorAll_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4DirMonitorAll.dir/moc_Condition4DirMonitorAll.cxx.o -c /mnt/disk/PTPS/Condition4DirMonitorAll/moc_Condition4DirMonitorAll.cxx",
+  "file": "/mnt/disk/PTPS/Condition4DirMonitorAll/moc_Condition4DirMonitorAll.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4Once",
+  "command": "/usr/bin/c++   -DCondition4Once_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4Once.dir/Condition4Once.cpp.o -c /mnt/disk/PTPS/Condition4Once/Condition4Once.cpp",
+  "file": "/mnt/disk/PTPS/Condition4Once/Condition4Once.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4Once",
+  "command": "/usr/bin/c++   -DCondition4Once_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4Once.dir/moc_Condition4Once.cxx.o -c /mnt/disk/PTPS/Condition4Once/moc_Condition4Once.cxx",
+  "file": "/mnt/disk/PTPS/Condition4Once/moc_Condition4Once.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4Timer",
+  "command": "/usr/bin/c++   -DCondition4Timer_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4Timer.dir/Condition4Timer.cpp.o -c /mnt/disk/PTPS/Condition4Timer/Condition4Timer.cpp",
+  "file": "/mnt/disk/PTPS/Condition4Timer/Condition4Timer.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4Timer",
+  "command": "/usr/bin/c++   -DCondition4Timer_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4Timer.dir/moc_Condition4Timer.cxx.o -c /mnt/disk/PTPS/Condition4Timer/moc_Condition4Timer.cxx",
+  "file": "/mnt/disk/PTPS/Condition4Timer/moc_Condition4Timer.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4CycleTimer",
+  "command": "/usr/bin/c++   -DCondition4CycleTimer_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4CycleTimer.dir/Condition4CycleTimer.cpp.o -c /mnt/disk/PTPS/Condition4CycleTimer/Condition4CycleTimer.cpp",
+  "file": "/mnt/disk/PTPS/Condition4CycleTimer/Condition4CycleTimer.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Condition4CycleTimer",
+  "command": "/usr/bin/c++   -DCondition4CycleTimer_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Condition4CycleTimer.dir/moc_Condition4CycleTimer.cxx.o -c /mnt/disk/PTPS/Condition4CycleTimer/moc_Condition4CycleTimer.cxx",
+  "file": "/mnt/disk/PTPS/Condition4CycleTimer/moc_Condition4CycleTimer.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/ConditionTrigger",
+  "command": "/usr/bin/c++   -DConditionTrigger_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/ConditionTrigger.dir/ConditionTrigger.cpp.o -c /mnt/disk/PTPS/ConditionTrigger/ConditionTrigger.cpp",
+  "file": "/mnt/disk/PTPS/ConditionTrigger/ConditionTrigger.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/ConditionTrigger",
+  "command": "/usr/bin/c++   -DConditionTrigger_EXPORTS -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/ConditionTrigger.dir/moc_ConditionTrigger.cxx.o -c /mnt/disk/PTPS/ConditionTrigger/moc_ConditionTrigger.cxx",
+  "file": "/mnt/disk/PTPS/ConditionTrigger/moc_ConditionTrigger.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/CZMQ_Worker",
+  "command": "/usr/bin/cc  -DCZMQ_Worker_EXPORTS -DDEBUG -DSINGLE -g -fPIC -I/mnt/disk/soft/zmq/include -I/mnt/disk/soft/czmq/include    -o CMakeFiles/CZMQ_Worker.dir/mdwrkapi.c.o   -c /mnt/disk/PTPS/CZMQ_Worker/mdwrkapi.c",
+  "file": "/mnt/disk/PTPS/CZMQ_Worker/mdwrkapi.c"
+},
+{
+  "directory": "/mnt/disk/PTPS/Displayer",
+  "command": "/usr/bin/c++   -DDEBUG -DDisplayer_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Displayer.dir/Displayer.cpp.o -c /mnt/disk/PTPS/Displayer/Displayer.cpp",
+  "file": "/mnt/disk/PTPS/Displayer/Displayer.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Displayer",
+  "command": "/usr/bin/c++   -DDEBUG -DDisplayer_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Displayer.dir/moc_Displayer.cxx.o -c /mnt/disk/PTPS/Displayer/moc_Displayer.cxx",
+  "file": "/mnt/disk/PTPS/Displayer/moc_Displayer.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobDispatcher",
+  "command": "/usr/bin/c++   -DDEBUG -DJobDispatcher_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobDispatcher.dir/JobDispatcher.cpp.o -c /mnt/disk/PTPS/JobDispatcher/JobDispatcher.cpp",
+  "file": "/mnt/disk/PTPS/JobDispatcher/JobDispatcher.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobDispatcher",
+  "command": "/usr/bin/c++   -DDEBUG -DJobDispatcher_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobDispatcher.dir/moc_JobDispatcher.cxx.o -c /mnt/disk/PTPS/JobDispatcher/moc_JobDispatcher.cxx",
+  "file": "/mnt/disk/PTPS/JobDispatcher/moc_JobDispatcher.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobScheduler",
+  "command": "/usr/bin/c++   -DDEBUG -DJobScheduler_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobScheduler.dir/JobScheduler.cpp.o -c /mnt/disk/PTPS/JobScheduler/JobScheduler.cpp",
+  "file": "/mnt/disk/PTPS/JobScheduler/JobScheduler.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobScheduler",
+  "command": "/usr/bin/c++   -DDEBUG -DJobScheduler_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobScheduler.dir/moc_JobScheduler.cxx.o -c /mnt/disk/PTPS/JobScheduler/moc_JobScheduler.cxx",
+  "file": "/mnt/disk/PTPS/JobScheduler/moc_JobScheduler.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/SQLITE_wrapper",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -DSQLITE_wrapper_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/SQLITE_wrapper.dir/SQLITE_wrapper.cpp.o -c /mnt/disk/PTPS/SQLITE_wrapper/SQLITE_wrapper.cpp",
+  "file": "/mnt/disk/PTPS/SQLITE_wrapper/SQLITE_wrapper.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobManager",
+  "command": "/usr/bin/c++   -DDEBUG -DJobManager_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobManager.dir/JobManager.cpp.o -c /mnt/disk/PTPS/JobManager/JobManager.cpp",
+  "file": "/mnt/disk/PTPS/JobManager/JobManager.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/JobManager",
+  "command": "/usr/bin/c++   -DDEBUG -DJobManager_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/JobManager.dir/moc_JobManager.cxx.o -c /mnt/disk/PTPS/JobManager/moc_JobManager.cxx",
+  "file": "/mnt/disk/PTPS/JobManager/moc_JobManager.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/InterfaceSingle4Master",
+  "command": "/usr/bin/c++   -DDEBUG -DInterfaceSingle4Master_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/InterfaceSingle4Master.dir/InterfaceSingle4Master.cpp.o -c /mnt/disk/PTPS/InterfaceSingle4Master/InterfaceSingle4Master.cpp",
+  "file": "/mnt/disk/PTPS/InterfaceSingle4Master/InterfaceSingle4Master.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/InterfaceSingle4Master",
+  "command": "/usr/bin/c++   -DDEBUG -DInterfaceSingle4Master_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/InterfaceSingle4Master.dir/moc_InterfaceSingle4Master.cxx.o -c /mnt/disk/PTPS/InterfaceSingle4Master/moc_InterfaceSingle4Master.cxx",
+  "file": "/mnt/disk/PTPS/InterfaceSingle4Master/moc_InterfaceSingle4Master.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/InterfaceSingle4Slave",
+  "command": "/usr/bin/c++   -DDEBUG -DInterfaceSingle4Slave_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/InterfaceSingle4Slave.dir/InterfaceSingle4Slave.cpp.o -c /mnt/disk/PTPS/InterfaceSingle4Slave/InterfaceSingle4Slave.cpp",
+  "file": "/mnt/disk/PTPS/InterfaceSingle4Slave/InterfaceSingle4Slave.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/InterfaceSingle4Slave",
+  "command": "/usr/bin/c++   -DDEBUG -DInterfaceSingle4Slave_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/InterfaceSingle4Slave.dir/moc_InterfaceSingle4Slave.cxx.o -c /mnt/disk/PTPS/InterfaceSingle4Slave/moc_InterfaceSingle4Slave.cxx",
+  "file": "/mnt/disk/PTPS/InterfaceSingle4Slave/moc_InterfaceSingle4Slave.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/MsgReceiver",
+  "command": "/usr/bin/c++   -DDEBUG -DMsgReceiver_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/zmq/include -I/mnt/disk/soft/czmq/include    -o CMakeFiles/MsgReceiver.dir/MsgReceiver.cpp.o -c /mnt/disk/PTPS/MsgReceiver/MsgReceiver.cpp",
+  "file": "/mnt/disk/PTPS/MsgReceiver/MsgReceiver.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/MsgReceiver",
+  "command": "/usr/bin/c++   -DDEBUG -DMsgReceiver_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/zmq/include -I/mnt/disk/soft/czmq/include    -o CMakeFiles/MsgReceiver.dir/moc_MsgReceiver.cxx.o -c /mnt/disk/PTPS/MsgReceiver/moc_MsgReceiver.cxx",
+  "file": "/mnt/disk/PTPS/MsgReceiver/moc_MsgReceiver.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/TaskExecutor",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -DTaskExecutor_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/dyncall/include    -o CMakeFiles/TaskExecutor.dir/TaskExecutor.cpp.o -c /mnt/disk/PTPS/TaskExecutor/TaskExecutor.cpp",
+  "file": "/mnt/disk/PTPS/TaskExecutor/TaskExecutor.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/TaskExecutor",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -DTaskExecutor_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/dyncall/include    -o CMakeFiles/TaskExecutor.dir/moc_TaskExecutor.cxx.o -c /mnt/disk/PTPS/TaskExecutor/moc_TaskExecutor.cxx",
+  "file": "/mnt/disk/PTPS/TaskExecutor/moc_TaskExecutor.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/TaskController",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -DTaskController_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/dyncall/include    -o CMakeFiles/TaskController.dir/TaskController.cpp.o -c /mnt/disk/PTPS/TaskController/TaskController.cpp",
+  "file": "/mnt/disk/PTPS/TaskController/TaskController.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/TaskController",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -DTaskController_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/dyncall/include    -o CMakeFiles/TaskController.dir/moc_TaskController.cxx.o -c /mnt/disk/PTPS/TaskController/moc_TaskController.cxx",
+  "file": "/mnt/disk/PTPS/TaskController/moc_TaskController.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/Supporter_BSH",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -DSupporter_BSH_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Supporter_BSH.dir/Supporter_BSH.cpp.o -c /mnt/disk/PTPS/Supporter_BSH/Supporter_BSH.cpp",
+  "file": "/mnt/disk/PTPS/Supporter_BSH/Supporter_BSH.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/Supporter_BSH",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -DSupporter_BSH_EXPORTS -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore    -o CMakeFiles/Supporter_BSH.dir/moc_Supporter_BSH.cxx.o -c /mnt/disk/PTPS/Supporter_BSH/moc_Supporter_BSH.cxx",
+  "file": "/mnt/disk/PTPS/Supporter_BSH/moc_Supporter_BSH.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/PTPS_Master",
+  "command": "/usr/bin/c++   -DDEBUG -DPTPS_Master_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/zmq/include -I/mnt/disk/soft/czmq/include    -o CMakeFiles/PTPS_Master.dir/PTPS_Master.cpp.o -c /mnt/disk/PTPS/PTPS_Master/PTPS_Master.cpp",
+  "file": "/mnt/disk/PTPS/PTPS_Master/PTPS_Master.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/PTPS_Master",
+  "command": "/usr/bin/c++   -DDEBUG -DPTPS_Master_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/zmq/include -I/mnt/disk/soft/czmq/include    -o CMakeFiles/PTPS_Master.dir/moc_PTPS_Master.cxx.o -c /mnt/disk/PTPS/PTPS_Master/moc_PTPS_Master.cxx",
+  "file": "/mnt/disk/PTPS/PTPS_Master/moc_PTPS_Master.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/PTPS_Slave",
+  "command": "/usr/bin/c++   -DDEBUG -DPTPS_Slave_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/dyncall/include    -o CMakeFiles/PTPS_Slave.dir/PTPS_Slave.cpp.o -c /mnt/disk/PTPS/PTPS_Slave/PTPS_Slave.cpp",
+  "file": "/mnt/disk/PTPS/PTPS_Slave/PTPS_Slave.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/PTPS_Slave",
+  "command": "/usr/bin/c++   -DDEBUG -DPTPS_Slave_EXPORTS -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -fPIC -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/dyncall/include    -o CMakeFiles/PTPS_Slave.dir/moc_PTPS_Slave.cxx.o -c /mnt/disk/PTPS/PTPS_Slave/moc_PTPS_Slave.cxx",
+  "file": "/mnt/disk/PTPS/PTPS_Slave/moc_PTPS_Slave.cxx"
+},
+{
+  "directory": "/mnt/disk/PTPS/PTPS",
+  "command": "/usr/bin/c++   -DDEBUG -DQT_CORE_LIB -DQT_DEBUG -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_XML_LIB -DSINGLE -g -isystem /mnt/disk/soft/qt-4.8.2/include -isystem /mnt/disk/soft/qt-4.8.2/include/QtGui -isystem /mnt/disk/soft/qt-4.8.2/include/QtXml -isystem /mnt/disk/soft/qt-4.8.2/include/QtNetwork -isystem /mnt/disk/soft/qt-4.8.2/include/QtCore -I/mnt/disk/soft/zmq/include -I/mnt/disk/soft/czmq/include -I/mnt/disk/soft/dyncall/include    -o CMakeFiles/PTPS.dir/main.cpp.o -c /mnt/disk/PTPS/PTPS/main.cpp",
+  "file": "/mnt/disk/PTPS/PTPS/main.cpp"
+},
+{
+  "directory": "/mnt/disk/PTPS/ZMQ_BROKER",
+  "command": "/usr/bin/cc  -DDEBUG -DSINGLE -g -I/mnt/disk/soft/zmq/include -I/mnt/disk/soft/czmq/include    -o CMakeFiles/ZMQ_BROKER.exe.dir/mdbroker.c.o   -c /mnt/disk/PTPS/ZMQ_BROKER/mdbroker.c",
+  "file": "/mnt/disk/PTPS/ZMQ_BROKER/mdbroker.c"
+}
+]

@@ -1,0 +1,12 @@
+
+
+
+if(MSVC)
+    include_directories(F:/Lice/work/Scheduler/PTPS/SQLITE_wrapper)
+    link_directories(F:/Lice/work/Scheduler/PTPS/SQLITE_wrapper)
+    link_libraries( sqlite3 )
+else()
+    #include_directories(/mnt/disk/soft/dyncall/include )
+    #link_directories(/mnt/disk/soft/dyncall/lib )
+    #link_libraries( dyncall_s dynload_s )
+endif()

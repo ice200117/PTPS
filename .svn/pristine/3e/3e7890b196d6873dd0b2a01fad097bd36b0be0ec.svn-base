@@ -1,0 +1,15 @@
+
+include ( ../qt.cmake )
+include (../common.cmake )
+include (../sqlite3.cmake)
+
+if(MSVC) 
+  enable_language(ASM_MASM)
+  add_definitions(-DJOBMANAGER_EXPORTS )
+endif()
+
+
+set(Qhdrs JobManager.h)
+QT4_WRAP_CPP(moc_srcs ${Qhdrs})
+add_library( JobManager SHARED JobManager.cpp ${moc_srcs})
+target_link_libraries(JobManager ${QT_LIBRARIES} common Logger ConditionTrigger JobResolver JobScheduler SQLITE_wrapper)

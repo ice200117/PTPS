@@ -1,0 +1,19 @@
+include ( ../qt.cmake )
+include (../common.cmake )
+include (../sqlite3.cmake )
+
+if(MSVC) 
+  enable_language(ASM_MASM)
+  add_definitions(-DSQLITE_WRAPPER_EXPORTS )
+endif()
+
+#set(Qhdrs DSQLITE_wrapper.hpp )
+#QT4_WRAP_CPP(moc_srcs ${Qhdrs})
+#add_library( SQLITE_wrapper SHARED SQLITE_wrapper.cpp   ${moc_srcs})
+
+add_library( SQLITE_wrapper SHARED SQLITE_wrapper.cpp)
+target_link_libraries(SQLITE_wrapper  common sqlite3)
+
+#set(EXECUTABLE_OUTPUT_PATH ./)
+#add_executable(testDB testDB.cpp)
+#target_link_libraries(testDB common SQLITE_wrapper)

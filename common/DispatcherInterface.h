@@ -1,0 +1,60 @@
+#pragma once
+#include "common_global.h"
+
+#include <QObject>
+#include <QThread>
+#include "Task.hpp"
+
+#define SINGLE
+//#define USE_MPI
+
+
+
+enum InfoType {
+    SendTask,
+    SendResource,
+    SendHeartBeat
+};				/* ----------  end of enum InfoType  ---------- */
+typedef enum InfoType InfoType;
+
+
+class COMMON_EXPORT Master2SlaveInterface : public QThread
+{
+	Q_OBJECT
+public:
+    virtual ~Master2SlaveInterface(){};
+    virtual QString initialize(){return "";};
+    virtual void	uninitialize(){};
+
+public slots:
+	virtual QString slotDispatcherTask2Slave(Task, Resource) = 0;
+
+signals:
+	QString signalHandleResult2JobDispatcher(Task, Resource);
+	QString signalSendRes2JobDispatcher(std::string, std::list<Resource>);
+
+	QString signalRemoveRes2JobDispatcher(std::string);
+
+protected:
+	virtual void run() = 0;
+};
+
+class COMMON_EXPORT Slave2MasterInterface : public QThread
+{
+	Q_OBJECT
+
+public:
+    virtual ~Slave2MasterInterface(){};
+    virtual QString initialize(){return "";};
+    virtual void	uninitialize(){};
+
+public slots:
+	virtual QString slotHandleResult2Master(Task, Resource) = 0;
+	virtual QString slotSendRes2Master(QString nodeName, std::list<Resource> lr) = 0;
+
+signals:
+	QString signalDispatcherTask2TaskController(Task, Resource);
+
+protected:
+	virtual void run() = 0;
+};

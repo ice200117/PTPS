@@ -1,0 +1,151 @@
+#include "JobManager.h"
+#include    "../common/global_def.hpp"
+
+#include "../Logger/Logger.h"
+
+JobManager::JobManager(void)
+{
+	m_pJobScheduler = new JobScheduler;
+	m_pJobResolver = new JobResolver;
+	m_pConditionTrigger = new ConditionTrigger;
+	m_pConditionTrigger->_pJobResolver = m_pJobResolver;
+
+
+	QString res = m_pConditionTrigger->initConditionTrigger();
+	if ("Successful" != res)
+	{
+		Logger *p = &(Logger::getInstance());
+		p->writeInfo(res);
+	}
+
+	connect(m_pConditionTrigger,SIGNAL(signalExecJob(QString)),this,SLOT(slotExecJob(QString)));
+
+}
+
+JobManager::~JobManager(void)
+{
+	if (m_pJobScheduler)
+	{
+		delete m_pJobScheduler;
+	}
+	if (m_pJobResolver)
+	{
+		delete m_pJobResolver;
+	}
+	if (m_pConditionTrigger)
+	{
+		delete m_pConditionTrigger;
+	}
+}
+
+QString JobManager::slotHandleNewCommand( QString strNewCommand)
+{
+	Logger *p = &(Logger::getInstance());
+
+	if (strNewCommand.contains("START"))
+	{
+		QStringList tmpComLst = strNewCommand.split("#");
+		if (tmpComLst.size() < 2) return QString("Command not identify: '%1'").arg(strNewCommand);
+		QString res = m_pConditionTrigger->createNewConditionJob(tmpComLst[1]);
+		if ("Successful" != res)
+		{
+			p->writeInfo(res);
+			return res;
+		}
+		else
+		{
+			p->writeInfo(QString("START Job '%1'.").arg(tmpComLst[1]));
+			return "Successful";
+		}
+	}
+	else if (strNewCommand.contains("CLOSE"))
+	{
+		QStringList tmpComLst = strNewCommand.split("#");
+		if (tmpComLst.size() < 2) return QString("Command not identify: '%1'").arg(strNewCommand);
+		QString res = m_pConditionTrigger->deleteExistConditionJob(tmpComLst[1]);
+		if ("Successful" != res)
+		{
+			p->writeInfo(res);
+			return res;
+		}
+		else
+		{
+			p->writeInfo(QString("CLOSE Job '%1'.").arg(tmpComLst[1]));
+			return "Successful";
+		}
+	}
+	else
+	{
+		return QString("No Command '%a'").arg(strNewCommand);
+	}
+}
+
+Task* JobManager::findTask(Task t)
+{
+	map<QString, list<Task*> >::iterator it_map = MAP_JOBID_LISTTASK.begin();
+	for ( ; it_map != MAP_JOBID_LISTTASK.end(); it_map++){
+		list<Task*> lpt = it_map->second;
+		list<Task*>::iterator it = lpt.begin();
+		for( ; it != lpt.end(); it++){
+			if( (*(*it)) == t) return (*it);
+		}
+	}
+	return NULL;
+}
+
+QString JobManager::slotChangeTaskState( Task t)
+{
+	QMutexLocker locker(&m_mutex_MAP_JOBID_LISTTASK);
+	Task* pt = findTask(t);
+	if( pt != NULL)	{
+		(*pt) = t;
+
+        //if(t.status == 	FINISHED || t.status == FAILED){
+            //m_runningTasks.remove(pt);
+        //}
+	    return "Successful";
+	}else{
+        //idebug("%s\n", "Can not find task!");
+        return "Can not find task!";
+    }
+}
+
+Task* JobManager::slotApplyNewTask( QString )
+{
+    Task *pt = m_pJobScheduler->getWaitTask();
+    return pt;
+}
+
+QString JobManager::slotExecJob( QString strExecJobID )
+{
+	Logger *p = &(Logger::getInstance());
+
+	p->writeInfo(QString("Begin '%1'.").arg(strExecJobID));
+
+	QList<Task *> listTask4OneJob = m_pJobResolver->getResolveResOnTaskList(strExecJobID);
+
+	if (listTask4OneJob.isEmpty())
+	{
+		p->writeInfo(QString("Task resolve fail on '%1'.").arg(strExecJobID));
+	}
+
+	QMutexLocker locker(&m_mutex_MAP_JOBID_LISTTASK);
+    std::list<Task *> lpt = listTask4OneJob.toStdList(); 
+    MAP_JOBID_LISTTASK[strExecJobID].insert(MAP_JOBID_LISTTASK[strExecJobID].end(), lpt.begin(), lpt.end());
+    m_pJobScheduler->pushTasksAndSort(lpt);
+
+	//for (int i = 0;i < listTask4OneJob.size();i++)
+	//{
+        //lpt.push_back(listTask4OneJob[i]);
+		//m_pJobScheduler->pushTask2Wait(listTask4OneJob[i]);
+	//}
+
+	return "Successful";
+}
+
+
+QString JobManager::slotRedoTask(std::list<Task*> lpt)
+{
+    m_pJobScheduler->pushTasksAndSort(lpt);
+	return "Successful";
+}

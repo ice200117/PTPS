@@ -1,0 +1,217 @@
+/**
+ *          @file:  SlaveInterfaceMPI.cpp
+ *         @brief:  
+ *        @author:  liu bin , ice200117@126.com
+ *          @date:  2014年04月11日 12时04分34秒
+ *       @version:  none
+ *          @note:  
+ */
+
+#include    "SlaveInterfaceMPI.hpp"
+#include "mpi.h"
+#include  <QApplication>
+#include <QSettings>
+#include <QStringList> 
+#include  <QBuffer>
+#include  <QList>
+#include <fstream>
+#include <iostream>
+#include    "../common/Serialization.hpp"
+
+#include    "../common/global_def.hpp"
+
+static MPI_Comm newcomm;
+
+SlaveInterfaceMPI::SlaveInterfaceMPI (  )
+{
+    memset(m_portName, 0, 1024);
+    memset(m_servName, 0, 256);
+    memset(m_errmsg, 0, 1024);
+
+    strcpy(m_servName,"MyTest");
+
+    QString exePath = QCoreApplication::applicationDirPath();
+    QString mpiCPath = exePath + "/Config/MPIConfig.ini";
+    QSettings mpiIniRead (mpiCPath, QSettings::IniFormat);
+    m_argc = mpiIniRead.value("MPI_Arg/argc").toInt();
+    QStringList argvStrLst = mpiIniRead.value("MPI_Arg/argv").toString().split(" ");
+    m_argv  = (char**)calloc(m_argc, sizeof(char*));
+    for (int i = 0;i < m_argc;i++)
+    {
+        std::string tmpStr = argvStrLst[i].toStdString();
+        char *tmpChar = (char *)tmpStr.c_str();
+        m_argv[i] = tmpChar;
+    }
+
+}
+
+SlaveInterfaceMPI::~SlaveInterfaceMPI (  )
+{
+    free(m_argv);
+}
+
+
+QString SlaveInterfaceMPI::initialize (  )
+{
+    int provided, rank,  size, merr;
+
+
+#ifdef  DEBUG
+    //int gdb_break = 1;
+    //while( gdb_break ) { }
+#endif     /* -----  DEBUG  ----- */
+
+    MPI_Init_thread(&m_argc,&m_argv,MPI_THREAD_MULTIPLE, &provided);
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&size);
+
+    if(size!=1)
+    {
+        fprintf(stderr,"this MPI serve program only run with 1 process\n");
+        fflush(stderr);
+        return QString("MasterInterfaceMPI OBJ init failed, size must be one!");
+    }
+
+	MPI_Barrier(MPI_COMM_WORLD);
+    idebug("%s\n", m_portName);
+    idebug("%s\n", m_servName);
+
+#ifdef _WINDOWS
+    std::ifstream inputStream("port.txt");
+    if(!inputStream) {
+        std::cout << "Error opening intput stream" << std::endl;
+        return "Error opening input stream";
+    }
+    inputStream.getline(m_portName, 1024);
+    inputStream.close();
+#else
+    merr=MPI_Lookup_name(m_servName,MPI_INFO_NULL,m_portName);
+    if(merr)
+    {
+        MPI_Error_string(merr,m_errmsg,&m_msglen);
+        idebug("Error in MPI_Lookup_name:\"%s\"\n",m_errmsg);
+        return m_errmsg;
+    }
+#endif
+    //strcpy(m_portName, "tag=0 description=Dh-0111171552 port=5902 ifname=192.168.56.1");
+    idebug("port = %s\n", m_portName);
+
+	merr = MPI_Comm_connect(m_portName,MPI_INFO_NULL,0,MPI_COMM_SELF,&newcomm);
+	idebug("Slave: %s, connected to server at: %s, newcomm = %d\n",m_host.toStdString().c_str(), m_portName, newcomm);
+
+    start();
+    return "Successful";
+}
+
+
+void SlaveInterfaceMPI::uninitialize (  )
+{
+    MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Comm_disconnect(&newcomm);
+	MPI_Finalize();
+}
+
+void SlaveInterfaceMPI::run()
+{
+    while( true )
+    {
+        waitTasks();
+    }
+}
+
+
+void SlaveInterfaceMPI::send()
+{
+    int  flag=0;
+
+    if( m_smsglen>0 )
+    {
+        MPI_Send(m_sb,m_smsglen,MPI_CHAR,0,flag,newcomm);
+        printf("Slave: %s, send to server at: %s Successful!\n",m_host.toStdString().c_str(), m_portName);
+        idebug("send len = %d", m_smsglen);
+    }
+
+}
+
+void SlaveInterfaceMPI::recv()
+{
+    MPI_Status stat, status;
+
+    idebug("%s\n", "Slave is waiting recv....");
+
+	MPI_Probe(MPI_ANY_SOURCE,MPI_ANY_TAG,newcomm,&stat);
+	MPI_Get_count(&stat,MPI_CHAR,&m_rmsglen);
+	MPI_Recv(m_rb,m_rmsglen,MPI_CHAR,stat.MPI_SOURCE,stat.MPI_TAG,newcomm,&status);
+    printf("Slave: %s, recv from server at: %s Successful!\n",m_host.toStdString().c_str(), m_portName);
+
+    idebug("recv len = %d", m_rmsglen);
+
+}
+
+QString SlaveInterfaceMPI::slotHandleResult2Master(Task t, Resource r)
+{
+    Serialization se;
+    QByteArray ba = se.serialize(t, r);
+    m_smsglen = ba.size();
+    mutex.lock();
+    memcpy(m_sb, ba.data(), m_smsglen);
+    send();
+    mutex.unlock();
+    return "Successful";
+}
+
+
+QString SlaveInterfaceMPI::slotSendRes2Master(QString nodeName, std::list<Resource> lr)
+{
+    Serialization se;
+    m_host = nodeName;
+    QByteArray ba = se.serialize(nodeName, lr);
+    mutex.lock();
+    m_smsglen = ba.size();
+    memcpy(m_sb, ba.data(), m_smsglen);
+    send();
+    mutex.unlock();
+    return "Successful";
+}
+
+void SlaveInterfaceMPI::waitTasks()
+{
+    recv();
+
+    Serialization se;
+    InfoType ift = se.deserialize(m_rb, m_rmsglen);
+    Task t;
+    Resource re;
+    switch ( ift )
+    {
+        case SendResource :
+            //子节点不会收到资源类型的消息
+            break;
+        case SendTask :
+            //子节点收到任务类型的消息
+            t = se.t();
+            re = se.re();
+	        emit signalDispatcherTask2TaskController(t, re);
+            break;
+        case SendHeartBeat :
+            idebug("%s\n", "..................................");
+            responseHeartBeat();
+            break;
+        default :
+            printf("No case %d in InfoType.\n", ift);
+            break;
+    }
+}
+
+void SlaveInterfaceMPI::responseHeartBeat()
+{
+    Serialization se;
+    InfoType ift = SendHeartBeat;
+    QByteArray ba = se.serialize(ift);
+    mutex.lock();
+    m_smsglen = ba.size();
+    memcpy(m_sb, ba.data(), m_smsglen);
+    send();
+    mutex.unlock();
+
+}

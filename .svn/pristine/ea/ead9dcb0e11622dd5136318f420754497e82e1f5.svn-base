@@ -1,0 +1,30 @@
+#pragma once
+#include "InterfaceSingle4Master_Global.h"
+#include "../common/DispatcherInterface.h"
+
+class INTERFACESINGLE4MASTER_IMPEXP InterfaceSingle4Master : public Master2SlaveInterface
+{
+	Q_OBJECT
+
+//public:
+//	static InterfaceSingle4Master &getInstance(void)
+//	{
+//		return *s_instance;
+//	}
+protected:
+	void run(){};
+
+public slots:
+	QString slotDispatcherTask2Slave(Task*, Resource);
+
+signals:
+	QString signalDispatcherTask2TaskController(Task, Resource);
+
+//private:
+//	InterfaceSingle4Master(void);//禁止构造函数
+//	virtual ~InterfaceSingle4Master(void);
+//	InterfaceSingle4Master(const InterfaceSingle4Master &);//禁止拷贝构造函数
+//	InterfaceSingle4Master & operator=(const InterfaceSingle4Master &);//禁止赋值拷贝函数
+//
+//	static QAtomicPointer<InterfaceSingle4Master> s_instance;/*!<使用原子指针,默认初始化为0。*/
+};

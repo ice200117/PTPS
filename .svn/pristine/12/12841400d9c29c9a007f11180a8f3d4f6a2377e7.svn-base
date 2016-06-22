@@ -1,0 +1,128 @@
+/**
+ *          @file:  Task.hpp
+ *         @brief:  
+ *        @author:  liu bin , ice200117@126.com
+ *          @date:  2014年01月08日 10时59分59秒
+ *       @version:  none
+ *          @note:  
+ */
+#ifndef  TASK_HPP
+#define  TASK_HPP
+
+#include  <string.h>
+#include  <string>
+#include  <QString>
+#include  <QObject>
+#include  <QDataStream>
+
+#include "common_global.h"
+#include    "global_def.hpp"
+
+#define	DEFAULT_LEN 64
+#define	PATH_LEN 512
+#define PARA_CNT 20
+#define PARA_LEN 128
+
+//#include <uuid/uuid.h>
+
+typedef char DateTime[20];  //YYYYMMDDHHMiSS.sss
+enum TaskStatus
+{
+    WAITING = 1,
+    RUNNING,
+    FINISHED,
+    FAILED
+};
+typedef enum TaskStatus TaskStatus;
+
+/**************paraType参数中对应的类型简写，比如参数从左到右依次为short，float，则paratype应是"sf", 参数和返回值用''分割
+c:char
+S:short
+i:integer
+l:long
+L:long long
+f:float
+d:double
+s:cstring == char* 
+p:void* //通用类型, 框架中利用char*来实现不同节点之间传递
+):输入参数和返回值的分隔符 //通用类型p返回值中包括两部分，前4个字节为一个int表示数据的长度len加4的整形值，后面为len长度的数据体
+v:void //没有返回值，仅返回值中可用
+ ***************/
+typedef struct TaskInfo TaskInfo;
+typedef struct TaskInfo// 1
+{
+
+    TaskInfo();
+    TaskInfo( const TaskInfo &ti );
+    ~TaskInfo();
+    
+    TaskInfo& operator=( const TaskInfo &ti);
+    friend QDataStream & operator << (QDataStream &dataStream, const TaskInfo &ti);
+    friend QDataStream & operator >> (QDataStream &dataStream, TaskInfo &ti);
+
+    int setRetValue(char* str, int len);
+
+    int execType;
+    int priority; // 优先级 //
+    char libName[PATH_LEN];
+    char funName[DEFAULT_LEN];
+    char paraType[PARA_CNT];
+    char paraValue[PARA_CNT][PARA_LEN];
+    char* inputValues[PARA_CNT]; //利用char*来传递所有的参数类型
+    int retLen;
+    char* retValue; //利用char*来传递所有的返回类型
+}TaskInfo;
+
+/**
+ *        @class:  Task
+ *        @brief:  A job include one or many tasks.
+ *       @author:  liu bin , ice200117@126.com
+ *         @note:  
+ */
+class COMMON_EXPORT Task
+{
+    public:
+        Task();
+        Task (TaskInfo ti);                             /* constructor */
+        ~Task();
+
+        bool operator<( const Task &t) const; 
+        bool operator==( const Task &t);
+        bool operator()( Task *t1, Task *t2);
+        Task& operator=( const Task &t); 
+
+        friend QDataStream & operator << (QDataStream &dataStream, const Task &t);
+        friend QDataStream & operator >> (QDataStream &dataStream, Task &t);
+        
+        int calWeight();
+
+        // private:
+        int taskId;
+        DateTime beginTime;
+        DateTime endTime;
+        char host[DEFAULT_LEN];
+        int mpiPid; //mpi process id
+        int pid; //process id
+        TaskStatus status; //  1 waiting, 2 running , 3 finished ok, -1: failed  	
+        TaskInfo taskInfo; // specified by user.
+        int m_seconds; //任务创建的时间（秒）
+        //int m_weight; //根据优先级和等待的时间计算出的权重，用来对任务等待队列进行排序
+}; /* -----  end of class Task  ----- */
+
+//typedef struct resource Resource;
+//struct resource
+class Resource
+{
+    public:
+        Resource();
+        int rank;
+        QString nodeName;
+        bool operator==(const  Resource &t);
+        bool operator<( const Resource &t) const;
+        friend QDataStream & operator << (QDataStream &dataStream, const Resource &re);
+        friend QDataStream & operator >> (QDataStream &dataStream, Resource &re);
+
+        Resource& operator=( const Resource& r); 
+};
+
+#endif   /* ----- #ifndef TASK_HPP  ----- */
